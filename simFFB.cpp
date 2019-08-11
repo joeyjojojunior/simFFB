@@ -1,0 +1,527 @@
+// simFFB.cpp : Defines the entry point for the application.
+//
+
+#include "stdafx.h"
+#include "simFFB.h"
+#include "simstick.h"
+#include "Keymap.h"
+
+#include <strsafe.h>
+#include <WindowsX.h>
+#include <CommCtrl.h>
+#include <vector>
+#include <algorithm>
+
+#define MAX_LOADSTRING 100
+
+#define LAUNCHKEY 220
+
+// Global Variables:
+HINSTANCE hInst;                                // current instance
+TCHAR szTitle[MAX_LOADSTRING];                    // The title bar text
+TCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
+HWND g_hwnd;
+HMENU g_hm;
+int g_Init=1;  //flag for first run to call the initialization function
+BOOL g_ptrim=false; //Progressive trimming flag
+BOOL g_itrim=true;  //Instantaneous trimming flag
+stoptions jopt;
+
+Input::Keymap keymap;
+short iKeyState;
+
+// Controls
+HWND hwndCBSticks;     // Combobox for Joystick List
+HWND hwndCBTrimHold;   // Combobox for trim hold button
+HWND hwndCBTrimToggle; // Combobox for trim toggle button
+HWND hwndCBTrimCenter; // Combobox for trim center button
+
+HWND hwndTBSpring,hwndTBDamper,hwndTBFriction; //Track bar for spring, damper and friction strenght
+HWND hwndEBSpring,hwndEBDamper,hwndEBFriction; //read-only edit boxes to show strenght percentage
+
+HWND hwndTBDamper2; // Track bar for damper 2 strength
+HWND hwndEBDamper2; // Read-only edit box to show strength percentage
+
+HWND hwndTBFriction2; // Track bar for friction 2 strength
+HWND hwndEBFriction2; // Read-only edit box to show strength percentage
+
+HWND hwndCHSwap; //Swap axes chechbox
+HWND hwndLInitDInput; //Label
+HWND hwndCBInitDInput; //Set key for init dinput
+std::vector<int> initDinputKeyCodes; //Key codes
+
+// Forward declarations of functions included in this code module:
+ATOM                MyRegisterClass(HINSTANCE hInstance);
+BOOL                InitInstance(HINSTANCE, int);
+LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
+void InitAll(BOOL firstrun);
+void SetSwapCheckbox();
+
+int APIENTRY _tWinMain(HINSTANCE hInstance,
+                     HINSTANCE hPrevInstance,
+                     LPTSTR    lpCmdLine,
+                     int       nCmdShow)
+{
+    UNREFERENCED_PARAMETER(hPrevInstance);
+    UNREFERENCED_PARAMETER(lpCmdLine);
+
+     // TODO: Place code here.
+    MSG msg;
+    HACCEL hAccelTable;
+
+    // Initialize global strings
+    LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
+    LoadString(hInstance, IDC_SIMFFB, szWindowClass, MAX_LOADSTRING);
+    MyRegisterClass(hInstance);
+
+    // Perform application initialization:
+    if (!InitInstance (hInstance, nCmdShow))
+    {
+        return FALSE;
+    }
+
+    hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_SIMFFB));
+
+    g_hm=GetMenu(g_hwnd);
+    // Main message loop:
+    // This kind of message loop allows to constantly poll the joystick (or whatever
+    // it's needed to do constantly)
+    // instead of having the application stopped waiting for events
+    while(true) {
+        if(::PeekMessage(&msg,0,0,0,PM_REMOVE)) { //Process events
+             if (msg.message==WM_QUIT)
+                break;
+            ::TranslateMessage(&msg);
+            ::DispatchMessage(&msg);
+        } else { //no events, do you stuff here
+            if (g_Init) { //First run only
+                InitAll(true);
+                g_Init=0;
+            } else {
+                if (g_itrim)
+                    JoystickStuffIT();
+                if (g_ptrim)
+                    JoystickStuffPT();
+
+                iKeyState = GetAsyncKeyState(jopt.iKey);
+                if ((1 << 16) & iKeyState)
+                {
+                    InitAll(false);
+                }
+            }
+            Sleep(50);
+        }
+    }
+    StopEffects();
+    FreeDirectInput();
+    return (int) msg.wParam;
+}
+
+
+
+//
+//  FUNCTION: MyRegisterClass()
+//
+//  PURPOSE: Registers the window class.
+//
+//  COMMENTS:
+//
+//    This function and its usage are only necessary if you want this code
+//    to be compatible with Win32 systems prior to the 'RegisterClassEx'
+//    function that was added to Windows 95. It is important to call this function
+//    so that the application will get 'well formed' small icons associated
+//    with it.
+//
+ATOM MyRegisterClass(HINSTANCE hInstance)
+{
+    WNDCLASSEX wcex;
+
+    wcex.cbSize = sizeof(WNDCLASSEX);
+
+    wcex.style            = CS_HREDRAW | CS_VREDRAW;
+    wcex.lpfnWndProc    = WndProc;
+    wcex.cbClsExtra        = 0;
+    wcex.cbWndExtra        = 0;
+    wcex.hInstance        = hInstance;
+    wcex.hIcon            = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SIMFFB));
+    wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
+    wcex.hbrBackground    = (HBRUSH)(COLOR_WINDOW);
+    wcex.lpszMenuName    = MAKEINTRESOURCE(IDC_SIMFFB);
+    wcex.lpszClassName    = szWindowClass;
+    wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
+
+    return RegisterClassEx(&wcex);
+}
+
+//
+//   FUNCTION: InitInstance(HINSTANCE, int)
+//
+//   PURPOSE: Saves instance handle and creates main window
+//
+//   COMMENTS:
+//
+//        In this function, we save the instance handle in a global variable and
+//        create and display the main program window.
+//
+BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
+{
+   HWND hWnd;
+
+   hInst = hInstance; // Store instance handle in our global variable
+
+   hWnd = CreateWindow(szWindowClass, szTitle, WS_SYSMENU|WS_CAPTION|WS_MINIMIZEBOX|WS_DLGFRAME,CW_USEDEFAULT, 0, 473, 242, NULL, NULL, hInstance, NULL);
+  
+
+   if (!hWnd)
+   {
+      return FALSE;
+   }
+   g_hwnd=hWnd;
+   ShowWindow(hWnd,SW_SHOWNOACTIVATE); //the shownoactivate flag allows to open the application in the background so it doesn't interefere the simulation if it's already running
+   UpdateWindow(hWnd);
+
+   /////////////CONTROLS
+    CreateWindow(_T("static"),_T("Joystick"),WS_CHILD|WS_VISIBLE,5,3,130,20,hWnd,NULL,hInstance,NULL);
+    CreateWindow(_T("static"),_T("Hold"),WS_CHILD|WS_VISIBLE,305,3,130,20,hWnd,NULL,hInstance,NULL);
+    CreateWindow(_T("static"),_T("Toggle"),WS_CHILD|WS_VISIBLE,355,3,130,20,hWnd,NULL,hInstance,NULL);
+    CreateWindow(_T("static"),_T("Center"),WS_CHILD|WS_VISIBLE,405,3,130,20,hWnd,NULL,hInstance,NULL);
+    hwndCBSticks=CreateWindow(_T("combobox"),TEXT(""), CBS_DROPDOWNLIST |WS_CHILD | WS_VISIBLE,3,23,300,255,hWnd,NULL,hInstance,NULL);
+    hwndCBTrimHold =CreateWindow(_T("combobox"),TEXT(""),CBS_DROPDOWNLIST|WS_VSCROLL | WS_CHILD | WS_VISIBLE,305,23,50,255,hWnd,NULL,hInstance,NULL);
+    hwndCBTrimToggle = CreateWindow(_T("combobox"), TEXT(""), CBS_DROPDOWNLIST | WS_VSCROLL | WS_CHILD | WS_VISIBLE, 355, 23, 50, 255, hWnd, NULL, hInstance, NULL);
+    hwndCBTrimCenter = CreateWindow(_T("combobox"), TEXT(""), CBS_DROPDOWNLIST | WS_VSCROLL | WS_CHILD | WS_VISIBLE, 405, 23, 50, 255, hWnd, NULL, hInstance, NULL);
+
+    TCHAR *b=new TCHAR[10];
+    for (int i=0;i<32;i++) {
+        _stprintf(b,_T("%i"),i+1);
+        ComboBox_AddString(hwndCBTrimHold,b);
+        ComboBox_AddString(hwndCBTrimToggle, b);
+        ComboBox_AddString(hwndCBTrimCenter, b);
+    }
+    ComboBox_SetCurSel(hwndCBTrimHold,0);
+    ComboBox_SetCurSel(hwndCBTrimToggle, 0);
+    ComboBox_SetCurSel(hwndCBTrimCenter, 0);
+    delete b;
+
+    CreateWindow(_T("static"),_T("Spring Force\t%"),WS_CHILD|WS_VISIBLE,5,53,130,20,hWnd,NULL,hInstance,NULL);
+    hwndEBSpring=CreateWindow(_T("Edit"),_T("55"),WS_CHILD|WS_VISIBLE|ES_LEFT|ES_NUMBER|ES_READONLY,135,53,30,20,hWnd,NULL,hInstance,NULL);
+    hwndTBSpring=CreateWindow(TRACKBAR_CLASS,NULL,WS_CHILD|WS_VISIBLE|TBS_ENABLESELRANGE,168,53,290,20,hWnd,NULL,hInstance,NULL);
+    SendMessage(hwndTBSpring, TBM_SETRANGE,(WPARAM) TRUE,(LPARAM) MAKELONG(0, 100));
+    SendMessage(hwndTBSpring, TBM_SETPAGESIZE,0, (LPARAM) 1);
+    SendMessage(hwndTBSpring, TBM_SETSEL,(WPARAM) FALSE,(LPARAM) MAKELONG(0, 100)); 
+    SendMessage(hwndTBSpring, TBM_SETPOS,(WPARAM) TRUE,(LPARAM) 55);
+
+    CreateWindow(_T("static"),_T("Damper Force\t%"),WS_CHILD|WS_VISIBLE,5,73,130,20,hWnd,NULL,hInstance,NULL);
+    hwndEBDamper=CreateWindow(_T("Edit"),_T("55"),WS_CHILD|WS_VISIBLE|ES_LEFT|ES_NUMBER|ES_READONLY,135,73,30,20,hWnd,NULL,hInstance,NULL);
+    hwndTBDamper=CreateWindow(TRACKBAR_CLASS,NULL,WS_CHILD|WS_VISIBLE |TBS_ENABLESELRANGE,168,73,290,20,hWnd,NULL,hInstance,NULL);
+    SendMessage(hwndTBDamper, TBM_SETRANGE,(WPARAM) TRUE,(LPARAM) MAKELONG(0, 100));
+    SendMessage(hwndTBDamper, TBM_SETPAGESIZE,0, (LPARAM) 1);
+    SendMessage(hwndTBDamper, TBM_SETSEL,(WPARAM) FALSE,(LPARAM) MAKELONG(0, 100)); 
+    SendMessage(hwndTBDamper, TBM_SETPOS,(WPARAM) TRUE,(LPARAM) 55);
+
+    CreateWindow(_T("static"),_T("Friction Force\t%"),WS_CHILD|WS_VISIBLE,5,93,130,20,hWnd,NULL,hInstance,NULL);
+    hwndEBFriction=CreateWindow(_T("Edit"),_T("55"),WS_CHILD|WS_VISIBLE|ES_LEFT|ES_NUMBER|ES_READONLY,135,93,30,20,hWnd,NULL,hInstance,NULL);
+    hwndTBFriction=CreateWindow(TRACKBAR_CLASS,NULL,WS_CHILD|WS_VISIBLE |TBS_ENABLESELRANGE,168,93,290,20,hWnd,NULL,hInstance,NULL);
+    SendMessage(hwndTBFriction, TBM_SETRANGE,(WPARAM) TRUE,(LPARAM) MAKELONG(0, 100));
+    SendMessage(hwndTBFriction, TBM_SETPAGESIZE,0, (LPARAM) 1);
+    SendMessage(hwndTBFriction, TBM_SETSEL,(WPARAM) FALSE,(LPARAM) MAKELONG(0, 100)); 
+    SendMessage(hwndTBFriction, TBM_SETPOS,(WPARAM) TRUE,(LPARAM) 55);
+
+    CreateWindow(_T("static"),_T("Damper Force 2\t%"),WS_CHILD|WS_VISIBLE,5,113,130,20,hWnd,NULL,hInstance,NULL);
+    hwndEBDamper2=CreateWindow(_T("Edit"),_T("55"),WS_CHILD|WS_VISIBLE|ES_LEFT|ES_NUMBER|ES_READONLY,135,113,30,20,hWnd,NULL,hInstance,NULL);
+    hwndTBDamper2=CreateWindow(TRACKBAR_CLASS,NULL,WS_CHILD|WS_VISIBLE |TBS_ENABLESELRANGE,168,113,290,20,hWnd,NULL,hInstance,NULL);
+    SendMessage(hwndTBDamper2, TBM_SETRANGE,(WPARAM) TRUE,(LPARAM) MAKELONG(0, 100));
+    SendMessage(hwndTBDamper2, TBM_SETPAGESIZE,0, (LPARAM) 1);
+    SendMessage(hwndTBDamper2, TBM_SETSEL,(WPARAM) FALSE,(LPARAM) MAKELONG(0, 100)); 
+    SendMessage(hwndTBDamper2, TBM_SETPOS,(WPARAM) TRUE,(LPARAM) 55);
+
+    CreateWindow(_T("static"),_T("Friction Force 2\t%"),WS_CHILD|WS_VISIBLE,5,133,130,20,hWnd,NULL,hInstance,NULL);
+    hwndEBFriction2=CreateWindow(_T("Edit"),_T("55"),WS_CHILD|WS_VISIBLE|ES_LEFT|ES_NUMBER|ES_READONLY,135,133,30,20,hWnd,NULL,hInstance,NULL);
+    hwndTBFriction2=CreateWindow(TRACKBAR_CLASS,NULL,WS_CHILD|WS_VISIBLE |TBS_ENABLESELRANGE,168,133,290,20,hWnd,NULL,hInstance,NULL);
+    SendMessage(hwndTBFriction2, TBM_SETRANGE,(WPARAM) TRUE,(LPARAM) MAKELONG(0, 100));
+    SendMessage(hwndTBFriction2, TBM_SETPAGESIZE,0, (LPARAM) 1);
+    SendMessage(hwndTBFriction2, TBM_SETSEL,(WPARAM) FALSE,(LPARAM) MAKELONG(0, 100)); 
+    SendMessage(hwndTBFriction2, TBM_SETPOS,(WPARAM) TRUE,(LPARAM) 55);
+
+    hwndCHSwap=CreateWindow(_T("button"),_T("Swap Axis"),WS_CHILD|WS_VISIBLE|BS_CHECKBOX|BS_LEFTTEXT,3,159,90,20,hWnd,NULL,hInstance,NULL);
+    hwndLInitDInput = CreateWindow(_T("static"), _T("Init dinput"), WS_CHILD | WS_VISIBLE | ES_CENTER, 100, 159, 70, 20, hWnd, NULL, hInstance, NULL);
+    hwndCBInitDInput = CreateWindow(_T("combobox"), _T(""), CBS_DROPDOWNLIST | WS_VSCROLL | WS_CHILD | WS_VISIBLE | ES_CENTER, 173, 155, 150, 300, hWnd, NULL, hInstance, NULL);
+   
+   return TRUE;
+}
+
+//
+//  FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
+//
+//  PURPOSE:  Processes messages for the main window.
+//
+//  WM_COMMAND    - process the application menu
+//  WM_PAINT    - Paint the main window
+//  WM_DESTROY    - post a quit message and return
+//
+//
+LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    int wmId, wmEvent;
+    PAINTSTRUCT ps;
+    HDC hdc;
+
+    switch (message)
+    {
+    case WM_COMMAND:
+        wmId    = LOWORD(wParam);
+        wmEvent = HIWORD(wParam);
+
+        switch (wmEvent) {
+        case CBN_CLOSEUP:
+            if ((HWND)lParam == hwndCBInitDInput)
+            {
+            int z;
+            z = ComboBox_GetCurSel(hwndCBInitDInput);
+
+                if (!(z > initDinputKeyCodes.size()) && !(z < 0))
+                {
+                    jopt.iKey = initDinputKeyCodes.at(z);
+                }
+            }
+            break;
+        case CBN_SELCHANGE:
+            jopt.jtrim=ComboBox_GetCurSel(hwndCBSticks);
+            jopt.btrimHold=ComboBox_GetCurSel(hwndCBTrimHold); 
+            jopt.btrimToggle=ComboBox_GetCurSel(hwndCBTrimToggle); 
+            jopt.btrimCenter=ComboBox_GetCurSel(hwndCBTrimCenter); 
+            SetJtOptions(&jopt);
+            break;
+        case BN_CLICKED:
+            if ((HWND)lParam==hwndCHSwap) {
+                jopt.swap=!jopt.swap;
+                SetJtOptions(&jopt);
+                SetSwapCheckbox();
+            }
+            break;
+        
+        }
+        // Parse the menu selections:
+        switch (wmId)
+        {
+        case IDM_ABOUT:
+            DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+            break;
+        case ID_OPTIONS_RE: //Reinitialize
+            InitAll(false);
+            break;
+        case ID_OPTIONS_NT: //No trimming
+            g_itrim=false;
+            g_ptrim=false;
+            CheckMenuItem(g_hm,ID_OPTIONS_NT,MF_CHECKED);
+            CheckMenuItem(g_hm,ID_OPTIONS_IT,MF_UNCHECKED);
+            CheckMenuItem(g_hm,ID_OPTIONS_PT,MF_UNCHECKED);
+            CheckMenuItem(g_hm,ID_OPTIONS_BT,MF_UNCHECKED);
+            jopt.trimmode=0;
+            SetJtOptions(&jopt);
+            break;
+        case ID_OPTIONS_IT: //Trimming mode instantaneous
+            g_itrim=true;
+            g_ptrim=false;
+            CheckMenuItem(g_hm,ID_OPTIONS_NT,MF_UNCHECKED);
+            CheckMenuItem(g_hm,ID_OPTIONS_IT,MF_CHECKED);
+            CheckMenuItem(g_hm,ID_OPTIONS_PT,MF_UNCHECKED);
+            CheckMenuItem(g_hm,ID_OPTIONS_BT,MF_UNCHECKED);
+            jopt.trimmode=1;
+            SetJtOptions(&jopt);
+            break;
+        case ID_OPTIONS_PT: //Trimming mode progressive
+            g_ptrim=true;
+            g_itrim=false;
+            CheckMenuItem(g_hm,ID_OPTIONS_NT,MF_UNCHECKED);
+            CheckMenuItem(g_hm,ID_OPTIONS_IT,MF_UNCHECKED);
+            CheckMenuItem(g_hm,ID_OPTIONS_PT,MF_CHECKED);
+            CheckMenuItem(g_hm,ID_OPTIONS_BT,MF_UNCHECKED);
+            jopt.trimmode=2;
+            SetJtOptions(&jopt);
+            break;
+        case ID_OPTIONS_BT: //Both trimming modes
+            g_itrim=true;
+            g_ptrim=true;
+            CheckMenuItem(g_hm,ID_OPTIONS_NT,MF_UNCHECKED);
+            CheckMenuItem(g_hm,ID_OPTIONS_IT,MF_UNCHECKED);
+            CheckMenuItem(g_hm,ID_OPTIONS_PT,MF_UNCHECKED);
+            CheckMenuItem(g_hm,ID_OPTIONS_BT,MF_CHECKED);
+            jopt.trimmode=3;
+            SetJtOptions(&jopt);
+            break;
+        case IDM_EXIT:
+            DestroyWindow(hWnd);
+            break;
+        default:
+            return DefWindowProc(hWnd, message, wParam, lParam);
+        }
+        break;
+    case WM_PAINT:
+        hdc = BeginPaint(hWnd, &ps);
+        // TODO: Add any drawing code here...
+        EndPaint(hWnd, &ps);
+        break;
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        break;
+    case WM_HSCROLL:
+        if ((HWND)lParam == hwndTBSpring) {
+            jopt.spring = SendMessage(hwndTBSpring, TBM_GETPOS, 0, 0);
+            TCHAR* tmp = new TCHAR[10];
+            _stprintf(tmp, _T("%i"), jopt.spring);
+            Edit_SetText(hwndEBSpring, tmp);
+            SetJtOptions(&jopt);
+        }
+        else if ((HWND)lParam == hwndTBDamper2) {
+            jopt.damper2=SendMessage(hwndTBDamper2, TBM_GETPOS, 0, 0);
+            TCHAR *tmp=new TCHAR[10];
+            _stprintf(tmp,_T("%i"),jopt.damper2);
+            Edit_SetText(hwndEBDamper2,tmp);
+            SetJtOptions(&jopt);
+            //break;
+        } else if ((HWND)lParam==hwndTBDamper) {
+            jopt.damper=SendMessage(hwndTBDamper, TBM_GETPOS, 0, 0);
+            TCHAR *tmp=new TCHAR[10];
+            _stprintf(tmp,_T("%i"),jopt.damper);
+            Edit_SetText(hwndEBDamper,tmp);
+            SetJtOptions(&jopt);
+            //break;
+        } else if ((HWND)lParam==hwndTBFriction) {
+            jopt.friction=SendMessage(hwndTBFriction, TBM_GETPOS, 0, 0);
+            TCHAR *tmp=new TCHAR[10];
+            _stprintf(tmp,_T("%i"),jopt.friction);
+            Edit_SetText(hwndEBFriction,tmp);
+            SetJtOptions(&jopt);
+        } else if ((HWND)lParam==hwndTBFriction2) {
+            jopt.friction2=SendMessage(hwndTBFriction2, TBM_GETPOS, 0, 0);
+            TCHAR *tmp=new TCHAR[10];
+            _stprintf(tmp,_T("%i"),jopt.friction2);
+            Edit_SetText(hwndEBFriction2,tmp);
+            SetJtOptions(&jopt);
+        }
+    default:
+        return DefWindowProc(hWnd, message, wParam, lParam);
+    }
+    return 0;
+}
+
+// Message handler for about box.
+INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    UNREFERENCED_PARAMETER(lParam);
+    switch (message)
+    {
+    case WM_INITDIALOG:
+        return (INT_PTR)TRUE;
+    case WM_COMMAND:
+        if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
+        {
+            EndDialog(hDlg, LOWORD(wParam));
+            return (INT_PTR)TRUE;
+        }
+        break;
+    }
+    return (INT_PTR)FALSE;
+}
+
+void InitAll(BOOL firstrun)
+{
+    if (!firstrun) {
+        FreeDirectInput();
+        Sleep(100);
+    }
+    InitDirectInput(g_hwnd);
+    if (FAILED(Adquirir()))
+        return;
+    StartEffects();
+
+    GetJtOptions(&jopt);
+
+    EnableMenuItem(g_hm,ID_OPTIONS_RE,MF_ENABLED);
+
+    switch (jopt.trimmode) {
+        case 0:
+            CheckMenuItem(g_hm,ID_OPTIONS_NT,MF_CHECKED);
+            g_itrim=false;
+            g_ptrim=false;
+            break;
+        case 1:
+            CheckMenuItem(g_hm,ID_OPTIONS_IT,MF_CHECKED);
+            g_itrim=true;
+            g_ptrim=false;
+            break;
+        case 2: CheckMenuItem(g_hm,ID_OPTIONS_PT,MF_CHECKED);
+            g_itrim=false;
+            g_ptrim=true;
+            break;
+        case 3: CheckMenuItem(g_hm,ID_OPTIONS_BT,MF_CHECKED);
+            g_itrim=true;
+            g_ptrim=true;
+            break;
+    }
+
+    ComboBox_ResetContent(hwndCBSticks);
+    for (int k = 0; k < JoysticksNumber(); k++) {
+        ComboBox_AddString(hwndCBSticks,JoystickName(k));
+    }
+
+    //Fill combobox with keys
+    int savedKeyIndex = -1; // find index of key if saved in opt file
+    if (firstrun)
+    {
+        ComboBox_ResetContent(hwndCBInitDInput);
+
+        for (int i = 0; i < keymap.keys.size(); i++) {
+            if (keymap.keys.at(i).second == jopt.iKey)
+                savedKeyIndex = i;
+            std::string* str = &keymap.keys.at(i).first;
+            TCHAR* kName = new TCHAR[str->length() + 1];
+            kName[str->length()] = 0;
+            std::copy(str->begin(), str->end(), kName);
+            ComboBox_AddString(hwndCBInitDInput, kName);
+            initDinputKeyCodes.push_back(keymap.keys.at(i).second);
+        }
+    }
+
+    // Set combobox to saved key
+    if (savedKeyIndex >= 0) ComboBox_SetCurSel(hwndCBInitDInput, savedKeyIndex);
+    
+
+    int j,b,b2,b3;
+    GetTrimmer(j,b,b2,b3);
+    ComboBox_SetCurSel(hwndCBSticks,j);
+    ComboBox_SetCurSel(hwndCBTrimHold,b);
+    ComboBox_SetCurSel(hwndCBTrimToggle, b2); 
+    ComboBox_SetCurSel(hwndCBTrimCenter, b3); 
+
+    TCHAR *tmp=new TCHAR[10];
+    _stprintf(tmp,_T("%i"),jopt.spring);
+    Edit_SetText(hwndEBSpring,tmp);
+    _stprintf(tmp,_T("%i"),jopt.damper);
+    Edit_SetText(hwndEBDamper,tmp);
+    _stprintf(tmp,_T("%i"),jopt.friction);
+    Edit_SetText(hwndEBFriction,tmp);
+
+    _stprintf(tmp,_T("%i"),jopt.damper2);
+    Edit_SetText(hwndEBDamper2,tmp);
+    _stprintf(tmp,_T("%i"),jopt.friction2);
+    Edit_SetText(hwndEBFriction2,tmp);
+
+    SendMessage(hwndTBSpring, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) jopt.spring);
+    SendMessage(hwndTBDamper, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) jopt.damper);
+    SendMessage(hwndTBFriction, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) jopt.friction);
+    SendMessage(hwndTBDamper2, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) jopt.damper2);
+    SendMessage(hwndTBFriction2, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) jopt.friction2);
+
+    if (jopt.swap)
+        SetSwapCheckbox();
+}
+
+void SetSwapCheckbox()
+{
+    if (jopt.swap)
+        SendMessage(hwndCHSwap,BM_SETCHECK,(WPARAM)BST_CHECKED,NULL);
+    else
+        SendMessage(hwndCHSwap,BM_SETCHECK,(WPARAM)BST_UNCHECKED,NULL);
+}

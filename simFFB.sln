@@ -1,0 +1,41 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "simFFB", "simFFB.vcxproj", "{E34A5CF1-0D77-4B4D-B370-23DEA6E78712}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
+		JIB Version 64|Win32 = JIB Version 64|Win32
+		JIB Version 64|x64 = JIB Version 64|x64
+		JIB Version debug|Win32 = JIB Version debug|Win32
+		JIB Version debug|x64 = JIB Version debug|x64
+		JIB Version|Win32 = JIB Version|Win32
+		JIB Version|x64 = JIB Version|x64
+		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E34A5CF1-0D77-4B4D-B370-23DEA6E78712}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E34A5CF1-0D77-4B4D-B370-23DEA6E78712}.Debug|Win32.Build.0 = Debug|Win32
+		{E34A5CF1-0D77-4B4D-B370-23DEA6E78712}.Debug|x64.ActiveCfg = Debug|x64
+		{E34A5CF1-0D77-4B4D-B370-23DEA6E78712}.Debug|x64.Build.0 = Debug|x64
+		{E34A5CF1-0D77-4B4D-B370-23DEA6E78712}.JIB Version 64|Win32.ActiveCfg = Release|x64
+		{E34A5CF1-0D77-4B4D-B370-23DEA6E78712}.JIB Version 64|x64.ActiveCfg = Release|x64
+		{E34A5CF1-0D77-4B4D-B370-23DEA6E78712}.JIB Version 64|x64.Build.0 = Release|x64
+		{E34A5CF1-0D77-4B4D-B370-23DEA6E78712}.JIB Version debug|Win32.ActiveCfg = Release|x64
+		{E34A5CF1-0D77-4B4D-B370-23DEA6E78712}.JIB Version debug|x64.ActiveCfg = Release|x64
+		{E34A5CF1-0D77-4B4D-B370-23DEA6E78712}.JIB Version debug|x64.Build.0 = Release|x64
+		{E34A5CF1-0D77-4B4D-B370-23DEA6E78712}.JIB Version|Win32.ActiveCfg = Release|x64
+		{E34A5CF1-0D77-4B4D-B370-23DEA6E78712}.JIB Version|x64.ActiveCfg = Release|x64
+		{E34A5CF1-0D77-4B4D-B370-23DEA6E78712}.JIB Version|x64.Build.0 = Release|x64
+		{E34A5CF1-0D77-4B4D-B370-23DEA6E78712}.Release|Win32.ActiveCfg = Release|Win32
+		{E34A5CF1-0D77-4B4D-B370-23DEA6E78712}.Release|Win32.Build.0 = Release|Win32
+		{E34A5CF1-0D77-4B4D-B370-23DEA6E78712}.Release|x64.ActiveCfg = Release|x64
+		{E34A5CF1-0D77-4B4D-B370-23DEA6E78712}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
