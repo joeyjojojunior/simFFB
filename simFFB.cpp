@@ -32,6 +32,7 @@ short iKeyState;
 
 // Controls
 HWND hwndCBSticks;     // Combobox for Joystick List
+HWND hwndCBSticksPOV;  // Combobox for Joystick List (POV PT)
 HWND hwndCBTrimHold;   // Combobox for trim hold button
 HWND hwndCBTrimToggle; // Combobox for trim toggle button
 HWND hwndCBTrimCenter; // Combobox for trim center button
@@ -170,7 +171,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
    hInst = hInstance; // Store instance handle in our global variable
 
-   hWnd = CreateWindow(szWindowClass, szTitle, WS_SYSMENU|WS_CAPTION|WS_MINIMIZEBOX|WS_DLGFRAME,CW_USEDEFAULT, 0, 473, 242, NULL, NULL, hInstance, NULL);
+   hWnd = CreateWindow(szWindowClass, szTitle, WS_SYSMENU|WS_CAPTION|WS_MINIMIZEBOX|WS_DLGFRAME,CW_USEDEFAULT, 0, 473, 272, NULL, NULL, hInstance, NULL);
   
 
    if (!hWnd)
@@ -182,7 +183,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    UpdateWindow(hWnd);
 
    /////////////CONTROLS
-    CreateWindow(_T("static"),_T("Joystick"),WS_CHILD|WS_VISIBLE,5,3,130,20,hWnd,NULL,hInstance,NULL);
+    CreateWindow(_T("static"),_T("Joystick / PT POV"),WS_CHILD|WS_VISIBLE,5,3,130,20,hWnd,NULL,hInstance,NULL);
     CreateWindow(_T("static"),_T("Hold"),WS_CHILD|WS_VISIBLE,305,3,130,20,hWnd,NULL,hInstance,NULL);
     CreateWindow(_T("static"),_T("Toggle"),WS_CHILD|WS_VISIBLE,355,3,130,20,hWnd,NULL,hInstance,NULL);
     CreateWindow(_T("static"),_T("Center"),WS_CHILD|WS_VISIBLE,405,3,130,20,hWnd,NULL,hInstance,NULL);
@@ -203,49 +204,53 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     ComboBox_SetCurSel(hwndCBTrimCenter, 0);
     delete b;
 
-    CreateWindow(_T("static"),_T("Spring Force\t%"),WS_CHILD|WS_VISIBLE,5,53,130,20,hWnd,NULL,hInstance,NULL);
-    hwndEBSpring=CreateWindow(_T("Edit"),_T("55"),WS_CHILD|WS_VISIBLE|ES_LEFT|ES_NUMBER|ES_READONLY,135,53,30,20,hWnd,NULL,hInstance,NULL);
-    hwndTBSpring=CreateWindow(TRACKBAR_CLASS,NULL,WS_CHILD|WS_VISIBLE|TBS_ENABLESELRANGE,168,53,290,20,hWnd,NULL,hInstance,NULL);
+    hwndCBSticksPOV=CreateWindow(_T("combobox"),TEXT(""), CBS_DROPDOWNLIST |WS_CHILD | WS_VISIBLE,3,53,300,255,hWnd,NULL,hInstance,NULL);
+
+    CreateWindow(_T("static"),_T("SimFFB"),WS_CHILD|WS_VISIBLE|WS_BORDER|ES_CENTER,309,55,140,20,hWnd,NULL,hInstance,NULL);
+    
+    CreateWindow(_T("static"),_T("Spring Force\t%"),WS_CHILD|WS_VISIBLE,5,83,130,20,hWnd,NULL,hInstance,NULL);
+    hwndEBSpring=CreateWindow(_T("Edit"),_T("55"),WS_CHILD|WS_VISIBLE|ES_LEFT|ES_NUMBER|ES_READONLY,135,83,30,20,hWnd,NULL,hInstance,NULL);
+    hwndTBSpring=CreateWindow(TRACKBAR_CLASS,NULL,WS_CHILD|WS_VISIBLE|TBS_ENABLESELRANGE,168,83,290,20,hWnd,NULL,hInstance,NULL);
     SendMessage(hwndTBSpring, TBM_SETRANGE,(WPARAM) TRUE,(LPARAM) MAKELONG(0, 100));
     SendMessage(hwndTBSpring, TBM_SETPAGESIZE,0, (LPARAM) 1);
     SendMessage(hwndTBSpring, TBM_SETSEL,(WPARAM) FALSE,(LPARAM) MAKELONG(0, 100)); 
     SendMessage(hwndTBSpring, TBM_SETPOS,(WPARAM) TRUE,(LPARAM) 55);
 
-    CreateWindow(_T("static"),_T("Damper Force\t%"),WS_CHILD|WS_VISIBLE,5,73,130,20,hWnd,NULL,hInstance,NULL);
-    hwndEBDamper=CreateWindow(_T("Edit"),_T("55"),WS_CHILD|WS_VISIBLE|ES_LEFT|ES_NUMBER|ES_READONLY,135,73,30,20,hWnd,NULL,hInstance,NULL);
-    hwndTBDamper=CreateWindow(TRACKBAR_CLASS,NULL,WS_CHILD|WS_VISIBLE |TBS_ENABLESELRANGE,168,73,290,20,hWnd,NULL,hInstance,NULL);
+    CreateWindow(_T("static"),_T("Damper Force\t%"),WS_CHILD|WS_VISIBLE,5,103,130,20,hWnd,NULL,hInstance,NULL);
+    hwndEBDamper=CreateWindow(_T("Edit"),_T("55"),WS_CHILD|WS_VISIBLE|ES_LEFT|ES_NUMBER|ES_READONLY,135,103,30,20,hWnd,NULL,hInstance,NULL);
+    hwndTBDamper=CreateWindow(TRACKBAR_CLASS,NULL,WS_CHILD|WS_VISIBLE |TBS_ENABLESELRANGE,168,103,290,20,hWnd,NULL,hInstance,NULL);
     SendMessage(hwndTBDamper, TBM_SETRANGE,(WPARAM) TRUE,(LPARAM) MAKELONG(0, 100));
     SendMessage(hwndTBDamper, TBM_SETPAGESIZE,0, (LPARAM) 1);
     SendMessage(hwndTBDamper, TBM_SETSEL,(WPARAM) FALSE,(LPARAM) MAKELONG(0, 100)); 
     SendMessage(hwndTBDamper, TBM_SETPOS,(WPARAM) TRUE,(LPARAM) 55);
 
-    CreateWindow(_T("static"),_T("Friction Force\t%"),WS_CHILD|WS_VISIBLE,5,93,130,20,hWnd,NULL,hInstance,NULL);
-    hwndEBFriction=CreateWindow(_T("Edit"),_T("55"),WS_CHILD|WS_VISIBLE|ES_LEFT|ES_NUMBER|ES_READONLY,135,93,30,20,hWnd,NULL,hInstance,NULL);
-    hwndTBFriction=CreateWindow(TRACKBAR_CLASS,NULL,WS_CHILD|WS_VISIBLE |TBS_ENABLESELRANGE,168,93,290,20,hWnd,NULL,hInstance,NULL);
+    CreateWindow(_T("static"),_T("Friction Force\t%"),WS_CHILD|WS_VISIBLE,5,123,130,20,hWnd,NULL,hInstance,NULL);
+    hwndEBFriction=CreateWindow(_T("Edit"),_T("55"),WS_CHILD|WS_VISIBLE|ES_LEFT|ES_NUMBER|ES_READONLY,135,123,30,20,hWnd,NULL,hInstance,NULL);
+    hwndTBFriction=CreateWindow(TRACKBAR_CLASS,NULL,WS_CHILD|WS_VISIBLE |TBS_ENABLESELRANGE,168,123,290,20,hWnd,NULL,hInstance,NULL);
     SendMessage(hwndTBFriction, TBM_SETRANGE,(WPARAM) TRUE,(LPARAM) MAKELONG(0, 100));
     SendMessage(hwndTBFriction, TBM_SETPAGESIZE,0, (LPARAM) 1);
     SendMessage(hwndTBFriction, TBM_SETSEL,(WPARAM) FALSE,(LPARAM) MAKELONG(0, 100)); 
     SendMessage(hwndTBFriction, TBM_SETPOS,(WPARAM) TRUE,(LPARAM) 55);
 
-    CreateWindow(_T("static"),_T("Damper Force 2\t%"),WS_CHILD|WS_VISIBLE,5,113,130,20,hWnd,NULL,hInstance,NULL);
-    hwndEBDamper2=CreateWindow(_T("Edit"),_T("55"),WS_CHILD|WS_VISIBLE|ES_LEFT|ES_NUMBER|ES_READONLY,135,113,30,20,hWnd,NULL,hInstance,NULL);
-    hwndTBDamper2=CreateWindow(TRACKBAR_CLASS,NULL,WS_CHILD|WS_VISIBLE |TBS_ENABLESELRANGE,168,113,290,20,hWnd,NULL,hInstance,NULL);
+    CreateWindow(_T("static"),_T("Damper Force 2\t%"),WS_CHILD|WS_VISIBLE,5,143,130,20,hWnd,NULL,hInstance,NULL);
+    hwndEBDamper2=CreateWindow(_T("Edit"),_T("55"),WS_CHILD|WS_VISIBLE|ES_LEFT|ES_NUMBER|ES_READONLY,135,143,30,20,hWnd,NULL,hInstance,NULL);
+    hwndTBDamper2=CreateWindow(TRACKBAR_CLASS,NULL,WS_CHILD|WS_VISIBLE |TBS_ENABLESELRANGE,168,143,290,20,hWnd,NULL,hInstance,NULL);
     SendMessage(hwndTBDamper2, TBM_SETRANGE,(WPARAM) TRUE,(LPARAM) MAKELONG(0, 100));
     SendMessage(hwndTBDamper2, TBM_SETPAGESIZE,0, (LPARAM) 1);
     SendMessage(hwndTBDamper2, TBM_SETSEL,(WPARAM) FALSE,(LPARAM) MAKELONG(0, 100)); 
     SendMessage(hwndTBDamper2, TBM_SETPOS,(WPARAM) TRUE,(LPARAM) 55);
 
-    CreateWindow(_T("static"),_T("Friction Force 2\t%"),WS_CHILD|WS_VISIBLE,5,133,130,20,hWnd,NULL,hInstance,NULL);
-    hwndEBFriction2=CreateWindow(_T("Edit"),_T("55"),WS_CHILD|WS_VISIBLE|ES_LEFT|ES_NUMBER|ES_READONLY,135,133,30,20,hWnd,NULL,hInstance,NULL);
-    hwndTBFriction2=CreateWindow(TRACKBAR_CLASS,NULL,WS_CHILD|WS_VISIBLE |TBS_ENABLESELRANGE,168,133,290,20,hWnd,NULL,hInstance,NULL);
+    CreateWindow(_T("static"),_T("Friction Force 2\t%"),WS_CHILD|WS_VISIBLE,5,163,130,20,hWnd,NULL,hInstance,NULL);
+    hwndEBFriction2=CreateWindow(_T("Edit"),_T("55"),WS_CHILD|WS_VISIBLE|ES_LEFT|ES_NUMBER|ES_READONLY,155,163,30,20,hWnd,NULL,hInstance,NULL);
+    hwndTBFriction2=CreateWindow(TRACKBAR_CLASS,NULL,WS_CHILD|WS_VISIBLE |TBS_ENABLESELRANGE,168,163,290,20,hWnd,NULL,hInstance,NULL);
     SendMessage(hwndTBFriction2, TBM_SETRANGE,(WPARAM) TRUE,(LPARAM) MAKELONG(0, 100));
     SendMessage(hwndTBFriction2, TBM_SETPAGESIZE,0, (LPARAM) 1);
     SendMessage(hwndTBFriction2, TBM_SETSEL,(WPARAM) FALSE,(LPARAM) MAKELONG(0, 100)); 
     SendMessage(hwndTBFriction2, TBM_SETPOS,(WPARAM) TRUE,(LPARAM) 55);
 
-    hwndCHSwap=CreateWindow(_T("button"),_T("Swap Axis"),WS_CHILD|WS_VISIBLE|BS_CHECKBOX|BS_LEFTTEXT,3,159,90,20,hWnd,NULL,hInstance,NULL);
-    hwndLInitDInput = CreateWindow(_T("static"), _T("Init dinput"), WS_CHILD | WS_VISIBLE | ES_CENTER, 100, 159, 70, 20, hWnd, NULL, hInstance, NULL);
-    hwndCBInitDInput = CreateWindow(_T("combobox"), _T(""), CBS_DROPDOWNLIST | WS_VSCROLL | WS_CHILD | WS_VISIBLE | ES_CENTER, 173, 155, 150, 300, hWnd, NULL, hInstance, NULL);
+    hwndCHSwap=CreateWindow(_T("button"),_T("Swap Axis"),WS_CHILD|WS_VISIBLE|BS_CHECKBOX|BS_LEFTTEXT,3,189,90,20,hWnd,NULL,hInstance,NULL);
+    hwndLInitDInput = CreateWindow(_T("static"), _T("Init dinput"), WS_CHILD | WS_VISIBLE | ES_CENTER, 100, 189, 70, 20, hWnd, NULL, hInstance, NULL);
+    hwndCBInitDInput = CreateWindow(_T("combobox"), _T(""), CBS_DROPDOWNLIST | WS_VSCROLL | WS_CHILD | WS_VISIBLE | ES_CENTER, 173, 185, 150, 300, hWnd, NULL, hInstance, NULL);
    
    return TRUE;
 }
@@ -287,6 +292,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
         case CBN_SELCHANGE:
             jopt.jtrim=ComboBox_GetCurSel(hwndCBSticks);
+            jopt.jPOV=ComboBox_GetCurSel(hwndCBSticksPOV);
             jopt.btrimHold=ComboBox_GetCurSel(hwndCBTrimHold); 
             jopt.btrimToggle=ComboBox_GetCurSel(hwndCBTrimToggle); 
             jopt.btrimCenter=ComboBox_GetCurSel(hwndCBTrimCenter); 
@@ -462,8 +468,10 @@ void InitAll(BOOL firstrun)
     }
 
     ComboBox_ResetContent(hwndCBSticks);
+    ComboBox_ResetContent(hwndCBSticksPOV);
     for (int k = 0; k < JoysticksNumber(); k++) {
         ComboBox_AddString(hwndCBSticks,JoystickName(k));
+        ComboBox_AddString(hwndCBSticksPOV,JoystickName(k));
     }
 
     //Fill combobox with keys
@@ -488,9 +496,10 @@ void InitAll(BOOL firstrun)
     if (savedKeyIndex >= 0) ComboBox_SetCurSel(hwndCBInitDInput, savedKeyIndex);
     
 
-    int j,b,b2,b3;
-    GetTrimmer(j,b,b2,b3);
+    int j,k,b,b2,b3;
+    GetTrimmer(j,k,b,b2,b3);
     ComboBox_SetCurSel(hwndCBSticks,j);
+    ComboBox_SetCurSel(hwndCBSticksPOV,k);
     ComboBox_SetCurSel(hwndCBTrimHold,b);
     ComboBox_SetCurSel(hwndCBTrimToggle, b2); 
     ComboBox_SetCurSel(hwndCBTrimCenter, b3); 

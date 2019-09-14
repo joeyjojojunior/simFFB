@@ -19,6 +19,7 @@ typedef struct _sticks {
 
 typedef struct options {
     int jtrim;          // joystick  
+    int jPOV;           // POV hat for progressive trimmer
     int btrimHold;      // trim button (hold)
     int btrimToggle;    // trim button (toggle)
     int btrimCenter;    // trim button (center)
@@ -48,8 +49,8 @@ void InstantTrim();
 void CenterTrim(); // Centers joystick & turns on spring
 int JoysticksNumber();
 LPCTSTR JoystickName(int);
-void SetTrimmer(int,int,int,int);
-void GetTrimmer(int&,int&,int&,int&);
+void SetTrimmer(int,int,int,int,int);
+void GetTrimmer(int&,int&,int&,int&,int&);
 void SetJtOptions(stoptions *);
 void GetJtOptions(stoptions *);
 

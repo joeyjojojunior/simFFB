@@ -32,6 +32,7 @@ time_t time_last = INT_MAX; // Used for debouncing trim toggle
 sticks g_Sticks[MAXSTICKS];
 stoptions g_Opt={
     0,      // joystick      
+    0,      // joystick POV hat for progressive trimmer
     0,      // trim button (hold)    
     0,      // trim button (toggle)
     0,      // trim button (center)
@@ -124,15 +125,13 @@ HRESULT InitDirectInput(HWND hCon)
 
     if( -1==g_iNsticks )
     {
-        MessageBox( NULL, _T("No Joystick found.")
-                          _T("The sample will now exit."), 
+        MessageBox( NULL, _T("No Joystick found."), 
                           _T("FFConst"), MB_ICONERROR | MB_OK );
         return S_OK;
     }
     if (g_pFFDevice==NULL)
     {
-        MessageBox( NULL, _T("No FFB Joystick found.")
-                          _T("The sample will now exit."), 
+        MessageBox( NULL, _T("No FFB Joystick found."),
                           _T("FFConst"), MB_ICONERROR | MB_OK );
         return S_OK;
     }
@@ -713,9 +712,10 @@ void JoystickStuffIT()  //IT -> instantaneous trimming
 
 void JoystickStuffPT()  //PT -> progressive trimming
 {
+
     if (0==g_bSpring)
         return; //Do nothing if the trimming button is down
-    if (FAILED(poll(g_pFFDevice,&g_js)))
+    if (FAILED(poll(g_Sticks[g_Opt.jPOV].dev,&g_js)))
         return;
     switch (g_js.rgdwPOV[0]) { //To do: add diagonals for simultaneous directions
         case 0:                                            //Direction away from the user
@@ -833,10 +833,13 @@ LPCTSTR JoystickName(int i)
     return g_Sticks[i].name;
 }
 
-void SetTrimmer(int j,int b,int b2,int b3)
+void SetTrimmer(int j,int k,int b,int b2,int b3)
 {
-    if (j<g_iNsticks)
-        g_Opt.jtrim=j;
+    if (j < g_iNsticks) {
+        g_Opt.jtrim = j;
+        g_Opt.jPOV = k;
+    }
+
     if (b < MAXBUTTONS) {
         g_Opt.btrimHold = b;
         g_Opt.btrimToggle = b2;
@@ -844,9 +847,10 @@ void SetTrimmer(int j,int b,int b2,int b3)
     }
 }
 
-void GetTrimmer(int&j,int&b,int&b2,int&b3)
+void GetTrimmer(int&j,int&k,int&b,int&b2,int&b3)
 {
     j=g_Opt.jtrim;
+    k=g_Opt.jPOV;
     b=g_Opt.btrimHold;
     b2 = g_Opt.btrimToggle; 
     b3 = g_Opt.btrimCenter; 
@@ -854,7 +858,7 @@ void GetTrimmer(int&j,int&b,int&b2,int&b3)
 
 void SetJtOptions(stoptions *so)
 {
-    SetTrimmer(so->jtrim,so->btrimHold,so->btrimToggle,so->btrimCenter); 
+    SetTrimmer(so->jtrim,so->jPOV,so->btrimHold,so->btrimToggle,so->btrimCenter); 
     g_Opt.damper=so->damper*100;
     g_Opt.damper2 = so->damper2 * 100;
     g_Opt.friction=so->friction*100;
@@ -868,7 +872,7 @@ void SetJtOptions(stoptions *so)
 
 void GetJtOptions(stoptions *so)
 {
-    GetTrimmer(so->jtrim,so->btrimHold,so->btrimToggle,so->btrimCenter); 
+    GetTrimmer(so->jtrim,so->jPOV,so->btrimHold,so->btrimToggle,so->btrimCenter); 
     so->spring=g_Opt.spring/100;
     so->damper=g_Opt.damper/100;
     so->damper2 = g_Opt.damper2 / 100;
