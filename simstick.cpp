@@ -627,7 +627,7 @@ void Botones()
     BYTE new_btrimToggle_state = g_js.rgbButtons[i];
     // debounce
     auto ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-    if (new_btrimToggle_state == 0x80 && old_btrimToggle_state == 0x00 && ms - time_last > 100) {
+    if (new_btrimToggle_state == 0x80 && old_btrimToggle_state == 0x00 && ms - time_last > 200) {
         g_bBoton[i] = (g_bBoton[i] == DOWN) ? UP : DOWN;
         time_last = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
     }
@@ -729,6 +729,22 @@ void JoystickStuffPT()  //PT -> progressive trimming
             break;
         case 27000:                                        //Direction left
             SUBLIM(g_nXForce,TRIMSTEP,-DI_FFNOMINALMAX);
+            break;
+        case 4500:
+            SUBLIM(g_nYForce, TRIMSTEP, -DI_FFNOMINALMAX);
+            ADDLIM(g_nXForce, TRIMSTEP, DI_FFNOMINALMAX);
+            break;
+        case 13500:
+            ADDLIM(g_nYForce, TRIMSTEP, DI_FFNOMINALMAX);
+            ADDLIM(g_nXForce, TRIMSTEP, DI_FFNOMINALMAX);
+            break;
+        case 22500:
+            ADDLIM(g_nYForce, TRIMSTEP, DI_FFNOMINALMAX);
+            SUBLIM(g_nXForce, TRIMSTEP, -DI_FFNOMINALMAX);
+            break;
+        case 31500:
+            SUBLIM(g_nYForce, TRIMSTEP, -DI_FFNOMINALMAX);
+            SUBLIM(g_nXForce, TRIMSTEP, -DI_FFNOMINALMAX);
             break;
     }
     SetDeviceSpring();
