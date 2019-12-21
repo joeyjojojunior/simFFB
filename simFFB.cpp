@@ -241,7 +241,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     SendMessage(hwndTBDamper2, TBM_SETPOS,(WPARAM) TRUE,(LPARAM) 55);
 
     CreateWindow(_T("static"),_T("Friction Force 2\t%"),WS_CHILD|WS_VISIBLE,5,163,130,20,hWnd,NULL,hInstance,NULL);
-    hwndEBFriction2=CreateWindow(_T("Edit"),_T("55"),WS_CHILD|WS_VISIBLE|ES_LEFT|ES_NUMBER|ES_READONLY,155,163,30,20,hWnd,NULL,hInstance,NULL);
+    hwndEBFriction2=CreateWindow(_T("Edit"),_T("55"),WS_CHILD|WS_VISIBLE|ES_LEFT|ES_NUMBER|ES_READONLY,135,163,30,20,hWnd,NULL,hInstance,NULL);
     hwndTBFriction2=CreateWindow(TRACKBAR_CLASS,NULL,WS_CHILD|WS_VISIBLE |TBS_ENABLESELRANGE,168,163,290,20,hWnd,NULL,hInstance,NULL);
     SendMessage(hwndTBFriction2, TBM_SETRANGE,(WPARAM) TRUE,(LPARAM) MAKELONG(0, 100));
     SendMessage(hwndTBFriction2, TBM_SETPAGESIZE,0, (LPARAM) 1);
