@@ -26,6 +26,7 @@ typedef struct options {
     int spring;         // spring force 
     int damper;         // dampering level (force trim on)
     int friction;       // friction level (force trim on)
+    int spring2;        // spring force (force trim off)
     int damper2;        // dampering level (force trim off)
     int friction2;      // friction level (force trim off)
     int iKey;           // key for reinitializing dinput
@@ -66,4 +67,4 @@ void GetJtOptions(stoptions *);
 #define UP    0
 #define DOWN 1
 #define RELEASED 2
-#define CENTER_DAMP_COEFF 1.1
+#define CENTER_DAMP_COEFF 1.5

@@ -15,6 +15,7 @@ LPDIRECTINPUTEFFECT   g_pEffectSpring   = NULL;
 LPDIRECTINPUTEFFECT   g_pEffectDamper   = NULL;
 LPDIRECTINPUTEFFECT   g_pEffectFricti   = NULL;
 
+LPDIRECTINPUTEFFECT   g_pEffectSpring2  = NULL;
 LPDIRECTINPUTEFFECT   g_pEffectDamper2 = NULL;
 LPDIRECTINPUTEFFECT   g_pEffectFricti2 = NULL;
 
@@ -22,7 +23,7 @@ DWORD                 g_dwNumForceFeedbackAxis = 0;
 INT                   g_nXForce;
 INT                   g_nYForce;
 BYTE                  g_bBoton[MAXBUTTONS];
-DIJOYSTATE2              g_js;
+DIJOYSTATE2           g_js;
 BYTE                  g_bSpring = 1;  //Wether there is spring force or not
 int g_iNsticks = 0;
 int g_iFF = -1;
@@ -36,10 +37,11 @@ stoptions g_Opt={
     0,      // trim button (hold)    
     0,      // trim button (toggle)
     0,      // trim button (center)
-    4500,   // spring force 
-    8000,   // dampering level (force trim on)    
+    5000,   // spring force 
+    0000,   // dampering level (force trim on)    
     0,      // friction level (force trim on)    
-    8000,   // dampering level (force trim off)
+    0,      // spring force 2
+    5000,   // dampering level (force trim off)
     0,      // friction level (force trim off)
     0,      // key for reinitializing dinput
     true,   // swap axes        
@@ -282,12 +284,30 @@ HRESULT InitDirectInput(HWND hCon)
     condition[ax2].lNegativeCoefficient=g_Opt.spring;
     condition[ax2].lPositiveCoefficient=g_Opt.spring;
     //eff.dwGain = g_Opt.spring;
-    if( FAILED( hr = g_pFFDevice->CreateEffect( GUID_Spring, &eff, &g_pEffectSpring, NULL ) ) )
+    if (FAILED(hr = g_pFFDevice->CreateEffect(GUID_Spring, &eff, &g_pEffectSpring, NULL)))
     {
         return hr;
     }
 
+    //Create Spring Effect 2
+    condition[ax1].dwNegativeSaturation=g_Opt.spring2;
+    condition[ax1].dwPositiveSaturation=g_Opt.spring2;
+    condition[ax1].lNegativeCoefficient=g_Opt.spring2;
+    condition[ax1].lPositiveCoefficient=g_Opt.spring2;
+    condition[ax2].dwNegativeSaturation=g_Opt.spring2;
+    condition[ax2].dwPositiveSaturation=g_Opt.spring2;
+    condition[ax2].lNegativeCoefficient=g_Opt.spring2;
+    condition[ax2].lPositiveCoefficient=g_Opt.spring2;
+
+    if (FAILED(hr = g_pFFDevice->CreateEffect(GUID_Spring, &eff, &g_pEffectSpring2, NULL)))
+    {
+        return hr;
+    }
+    
+
     if( NULL == g_pEffectSpring )
+        return E_FAIL;
+    if( NULL == g_pEffectSpring2 )
         return E_FAIL;
     g_pEffectSpring->Start(1,0);
     return S_OK;
@@ -359,6 +379,10 @@ VOID FreeDirectInput()
     SAFE_RELEASE( g_pEffectSpring );
     SAFE_RELEASE( g_pEffectDamper );
     SAFE_RELEASE( g_pEffectFricti );
+    SAFE_RELEASE(g_pEffectSpring2);
+    SAFE_RELEASE(g_pEffectDamper2);
+    SAFE_RELEASE(g_pEffectFricti2);
+
     for (int i=0;i<g_iNsticks;i++)
         SAFE_RELEASE(g_Sticks[i].dev);
     //SAFE_RELEASE( g_pFFDevice );
@@ -432,8 +456,7 @@ HRESULT SetDeviceConditions()
         ax1=1;
         ax2=0;
     }
-    if (g_bSpring) SetDeviceSpring();
-    
+    SetDeviceSpring();
 
     // Friction
     condition[ax1].lOffset=0;
@@ -580,41 +603,95 @@ HRESULT SetDeviceSpring()
         ax1=1;
         ax2=0;
     }
-    ZeroMemory(condition,sizeof(condition));
-    condition[ax1].lOffset=g_nYForce;
-    condition[ax1].dwNegativeSaturation=g_Opt.spring;
-    condition[ax1].dwPositiveSaturation=g_Opt.spring;
-    condition[ax1].lDeadBand=0;
-    condition[ax1].lNegativeCoefficient=g_Opt.spring;
-    condition[ax1].lPositiveCoefficient=g_Opt.spring;
 
-    condition[ax2].lOffset=(g_Opt.swap?-g_nXForce:g_nXForce);
-    condition[ax2].dwNegativeSaturation=g_Opt.spring;
-    condition[ax2].dwPositiveSaturation=g_Opt.spring;
-    condition[ax2].lDeadBand=0;
-    condition[ax2].lNegativeCoefficient=g_Opt.spring;
-    condition[ax2].lPositiveCoefficient=g_Opt.spring;
+    // Spring 1
+    ZeroMemory(condition, sizeof(condition));
+    condition[ax1].lOffset = g_nYForce;
+    condition[ax1].dwNegativeSaturation = g_Opt.spring;
+    condition[ax1].dwPositiveSaturation = g_Opt.spring;
+    condition[ax1].lDeadBand = 0;
+    condition[ax1].lNegativeCoefficient = g_Opt.spring;
+    condition[ax1].lPositiveCoefficient = g_Opt.spring;
+
+    condition[ax2].lOffset = (g_Opt.swap ? -g_nXForce : g_nXForce);
+    condition[ax2].dwNegativeSaturation = g_Opt.spring;
+    condition[ax2].dwPositiveSaturation = g_Opt.spring;
+    condition[ax2].lDeadBand = 0;
+    condition[ax2].lNegativeCoefficient = g_Opt.spring;
+    condition[ax2].lPositiveCoefficient = g_Opt.spring;
 
     DIEFFECT eff;
-    ZeroMemory(&eff,sizeof(eff));
-    eff.dwSize                    = sizeof(DIEFFECT);
-    eff.dwFlags                    = DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS;
-    eff.dwDuration                = INFINITE;
-    eff.dwSamplePeriod            = 0;
-    eff.dwGain                    = DI_FFNOMINALMAX;
-    eff.dwTriggerButton            = DIEB_NOTRIGGER;
-    eff.dwTriggerRepeatInterval    = 0;
-    eff.cAxes                    = g_dwNumForceFeedbackAxis;
-    eff.rgdwAxes                = rgdwAxes;
-    eff.rglDirection            = rglDirection;
-    eff.lpEnvelope                = 0;
-    eff.cbTypeSpecificParams    = sizeof(condition);
-    eff.lpvTypeSpecificParams    = condition;
-    eff.dwStartDelay            = 0;
-
+    ZeroMemory(&eff, sizeof(eff));
+    eff.dwSize = sizeof(DIEFFECT);
+    eff.dwFlags = DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS;
+    eff.dwDuration = INFINITE;
+    eff.dwSamplePeriod = 0;
+    eff.dwGain = DI_FFNOMINALMAX;
+    eff.dwTriggerButton = DIEB_NOTRIGGER;
+    eff.dwTriggerRepeatInterval = 0;
+    eff.cAxes = g_dwNumForceFeedbackAxis;
+    eff.rgdwAxes = rgdwAxes;
+    eff.rglDirection = rglDirection;
+    eff.lpEnvelope = 0;
+    eff.cbTypeSpecificParams = sizeof(condition);
+    eff.lpvTypeSpecificParams = condition;
+    eff.dwStartDelay = 0;
+    
     if (g_pEffectSpring)
-        return g_pEffectSpring->SetParameters( &eff, DIEP_TYPESPECIFICPARAMS | DIEP_START );
-    return -1;
+        g_pEffectSpring->SetParameters(&eff, DIEP_TYPESPECIFICPARAMS);
+
+    // Spring 2
+    ZeroMemory(condition, sizeof(condition));
+    condition[ax1].lOffset = g_nYForce;
+    condition[ax1].dwNegativeSaturation = g_Opt.spring2;
+    condition[ax1].dwPositiveSaturation = g_Opt.spring2;
+    condition[ax1].lDeadBand = 0;
+    condition[ax1].lNegativeCoefficient = g_Opt.spring2;
+    condition[ax1].lPositiveCoefficient = g_Opt.spring2;
+
+    condition[ax2].lOffset = (g_Opt.swap ? -g_nXForce : g_nXForce);
+    condition[ax2].dwNegativeSaturation = g_Opt.spring2;
+    condition[ax2].dwPositiveSaturation = g_Opt.spring2;
+    condition[ax2].lDeadBand = 0;
+    condition[ax2].lNegativeCoefficient = g_Opt.spring2;
+    condition[ax2].lPositiveCoefficient = g_Opt.spring2;
+
+    ZeroMemory(&eff, sizeof(eff));
+    eff.dwSize = sizeof(DIEFFECT);
+    eff.dwFlags = DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS;
+    eff.dwDuration = INFINITE;
+    eff.dwSamplePeriod = 0;
+    eff.dwGain = DI_FFNOMINALMAX;
+    eff.dwTriggerButton = DIEB_NOTRIGGER;
+    eff.dwTriggerRepeatInterval = 0;
+    eff.cAxes = g_dwNumForceFeedbackAxis;
+    eff.rgdwAxes = rgdwAxes;
+    eff.rglDirection = rglDirection;
+    eff.lpEnvelope = 0;
+    eff.cbTypeSpecificParams = sizeof(condition);
+    eff.lpvTypeSpecificParams = condition;
+    eff.dwStartDelay = 0;
+
+    if (g_pEffectSpring2)
+        g_pEffectSpring2->SetParameters(&eff, DIEP_TYPESPECIFICPARAMS);
+
+    if (g_bSpring == 1) {
+        if (g_pEffectSpring2) g_pEffectSpring2->Stop();
+        if (g_pEffectSpring) g_pEffectSpring->Start(1, 0);
+        if (g_pEffectDamper2) g_pEffectDamper2->Stop();
+        if (g_pEffectDamper) g_pEffectDamper->Start(1, 0);
+        if (g_pEffectFricti2) g_pEffectFricti2->Stop();
+        if (g_pEffectFricti) g_pEffectFricti->Start(1, 0);
+    } else {
+        g_pEffectSpring2->SetParameters(&eff, DIEP_TYPESPECIFICPARAMS);
+        if (g_pEffectSpring) g_pEffectSpring->Stop();
+        if (g_pEffectSpring2) g_pEffectSpring2->Start(1, 0);
+        if (g_pEffectDamper) g_pEffectDamper->Stop();
+        if (g_pEffectDamper2) g_pEffectDamper2->Start(1, 0);
+        if (g_pEffectFricti) g_pEffectFricti->Stop();
+        if (g_pEffectFricti2) g_pEffectFricti2->Start(1, 0);
+    }
+    return 0;
 
 }
 
@@ -679,6 +756,8 @@ void StopEffects()
         g_pEffectDamper->Stop();
     if( g_pEffectFricti ) 
         g_pEffectFricti->Stop();
+    if (g_pEffectSpring2)
+        g_pEffectSpring2->Stop();
     if( g_pEffectDamper2 ) 
         g_pEffectDamper2->Stop();
     if( g_pEffectFricti2 ) 
@@ -691,23 +770,29 @@ void JoystickStuffIT()  //IT -> instantaneous trimming
         return;
 
     // Handle force trim toggle
-    if (g_bBoton[g_Opt.btrimToggle] == DOWN && (g_bSpring)) { // Disable spring force if force trim toggle button was pressed
-        NoSpring();
+    if (g_bBoton[g_Opt.btrimToggle] == DOWN && (g_bSpring)) { // Switch to spring force 2 if force trim toggle button was pressed
+        g_bSpring = 0;
         is_centered = false;
+        SetDeviceSpring();
     } else if (g_bBoton[g_Opt.btrimToggle] == UP && !is_centered) {  // Update spring center if trim toggle button pressed & joystick un-centered
+        g_bSpring = 1;
         InstantTrim();
         is_centered = true;
     }
 
     // Handle center trim
-    if (g_bBoton[g_Opt.btrimCenter] == DOWN && (g_bSpring)) // Trim center
+    if (g_bBoton[g_Opt.btrimCenter] == DOWN && (g_bSpring)) { // Trim center
         CenterTrim();
+    }
 
     // Handle hold trim
-    if ((g_bBoton[g_Opt.btrimHold] == DOWN) && (g_bSpring)) //Disable spring force if trim button is down
-        NoSpring();
-    else if (g_bBoton[g_Opt.btrimHold]==RELEASED) //Update spring center if trim button is released
+    if ((g_bBoton[g_Opt.btrimHold] == DOWN) && (g_bSpring)) { //Switch to spring force 2 if trim button is down
+        g_bSpring = 0;
+        SetDeviceSpring();
+    } else if (g_bBoton[g_Opt.btrimHold] == RELEASED) { //Update spring center if trim button is released
+        g_bSpring = 1;
         InstantTrim();
+    }
 }
 
 void JoystickStuffPT()  //PT -> progressive trimming
@@ -750,65 +835,6 @@ void JoystickStuffPT()  //PT -> progressive trimming
     SetDeviceSpring();
 }
 
-//nospring changes spring tension to a very low value so it feels as not tension is being applied.
-//Initialy it was just a function that called effect->stop, but it was troublesome, specially with the
-//logitech g940
-void NoSpring()
-{
-    LONG rglDirection[2] = {0, 0};
-    DICONDITION condition[2];
-    DWORD           rgdwAxes[2]     = { DIJOFS_X, DIJOFS_Y };
-    int ax1,ax2;
-
-    if (g_Opt.swap) {
-        ax1=0;
-        ax2=1;
-    } else {
-        ax1=1;
-        ax2=0;
-    }
-    ZeroMemory(condition,sizeof(condition));
-    condition[ax1].lOffset=g_nYForce;
-    condition[ax1].dwNegativeSaturation=100;
-    condition[ax1].dwPositiveSaturation=100;
-    condition[ax1].lDeadBand=0;
-    condition[ax1].lNegativeCoefficient=100;
-    condition[ax1].lPositiveCoefficient=100;
-
-    condition[ax2].lOffset=(g_Opt.swap?-g_nXForce:g_nXForce);
-    condition[ax2].dwNegativeSaturation=100;
-    condition[ax2].dwPositiveSaturation=100;
-    condition[ax2].lDeadBand=0;
-    condition[ax2].lNegativeCoefficient=100;
-    condition[ax2].lPositiveCoefficient=100;
-
-    DIEFFECT eff;
-    ZeroMemory(&eff,sizeof(eff));
-    eff.dwSize                    = sizeof(DIEFFECT);
-    eff.dwFlags                    = DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS;
-    eff.dwDuration                = INFINITE;
-    eff.dwSamplePeriod            = 0;
-    eff.dwGain                    = DI_FFNOMINALMAX;
-    eff.dwTriggerButton            = DIEB_NOTRIGGER;
-    eff.dwTriggerRepeatInterval    = 0;
-    eff.cAxes                    = g_dwNumForceFeedbackAxis;
-    eff.rgdwAxes                = rgdwAxes;
-    eff.rglDirection            = rglDirection;
-    eff.lpEnvelope                = 0;
-    eff.cbTypeSpecificParams    = sizeof(condition);
-    eff.lpvTypeSpecificParams    = condition;
-    eff.dwStartDelay            = 0;
-
-    if (g_pEffectSpring)
-        g_pEffectSpring->SetParameters( &eff, DIEP_TYPESPECIFICPARAMS | DIEP_START );
-    
-    if (g_pEffectDamper) g_pEffectDamper->Stop();
-    if (g_pEffectDamper2) g_pEffectDamper2->Start(1, 0);
-    if (g_pEffectFricti) g_pEffectFricti->Stop();
-    if (g_pEffectFricti2) g_pEffectFricti2->Start(1, 0);
-    g_bSpring=0; //flag the spring as not working
-}
-
 void InstantTrim()
 {
     if (FAILED(poll(g_pFFDevice,&g_js)))
@@ -816,25 +842,21 @@ void InstantTrim()
 
     g_nXForce = ((double)g_js.lX/65535)*20000-10000;  //Range has to be mapped from -65535,65535 to -10000,10000
     g_nYForce = ((double)g_js.lY/65535)*20000-10000;
-    if (g_pEffectDamper2) g_pEffectDamper2->Stop();
-    if (g_pEffectDamper) g_pEffectDamper->Start(1, 0);
-    if (g_pEffectFricti2) g_pEffectFricti2->Stop();
-    if (g_pEffectFricti) g_pEffectFricti->Start(1, 0);
     SetDeviceSpring();
-    g_bSpring=1;
 }
 
 // Center joystick and turn on spring
 void CenterTrim() {
     if (FAILED(poll(g_pFFDevice, &g_js)))
         return;
-    while (g_nXForce != 0 && g_nYForce != 0) {
-        if (g_nXForce != 0) g_nXForce = g_nXForce / CENTER_DAMP_COEFF;
-        if (g_nYForce != 0) g_nYForce = g_nYForce / CENTER_DAMP_COEFF;
+    
+    while (g_nXForce != 0) {
+        g_nXForce = g_nXForce / CENTER_DAMP_COEFF;
+        g_nYForce = g_nYForce / CENTER_DAMP_COEFF;
         SetDeviceSpring();
     }
+    g_nYForce = 0;
     SetDeviceSpring();
-    g_bSpring = 1;
 }
 
 int JoysticksNumber()
@@ -880,6 +902,7 @@ void SetJtOptions(stoptions *so)
     g_Opt.friction=so->friction*100;
     g_Opt.friction2=so->friction2*100;
     g_Opt.spring=so->spring*100;
+    g_Opt.spring2 = so->spring2 * 100;
     g_Opt.iKey = so->iKey;
     g_Opt.swap=so->swap;
     g_Opt.trimmode=so->trimmode;
@@ -890,6 +913,7 @@ void GetJtOptions(stoptions *so)
 {
     GetTrimmer(so->jtrim,so->jPOV,so->btrimHold,so->btrimToggle,so->btrimCenter); 
     so->spring=g_Opt.spring/100;
+    so->spring2 = g_Opt.spring2 / 100;
     so->damper=g_Opt.damper/100;
     so->damper2 = g_Opt.damper2 / 100;
     so->friction=g_Opt.friction/100;

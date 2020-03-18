@@ -40,6 +40,9 @@ HWND hwndCBTrimCenter; // Combobox for trim center button
 HWND hwndTBSpring,hwndTBDamper,hwndTBFriction; //Track bar for spring, damper and friction strenght
 HWND hwndEBSpring,hwndEBDamper,hwndEBFriction; //read-only edit boxes to show strenght percentage
 
+HWND hwndTBSpring2; // Track bar for spring 2 force
+HWND hwndEBSpring2;  // Read-only edit box to show strength percentage
+
 HWND hwndTBDamper2; // Track bar for damper 2 strength
 HWND hwndEBDamper2; // Read-only edit box to show strength percentage
 
@@ -171,7 +174,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
    hInst = hInstance; // Store instance handle in our global variable
 
-   hWnd = CreateWindow(szWindowClass, szTitle, WS_SYSMENU|WS_CAPTION|WS_MINIMIZEBOX|WS_DLGFRAME,CW_USEDEFAULT, 0, 473, 272, NULL, NULL, hInstance, NULL);
+   hWnd = CreateWindow(szWindowClass, szTitle, WS_SYSMENU|WS_CAPTION|WS_MINIMIZEBOX|WS_DLGFRAME,CW_USEDEFAULT, 0, 473, 292, NULL, NULL, hInstance, NULL);
   
 
    if (!hWnd)
@@ -231,26 +234,34 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     SendMessage(hwndTBFriction, TBM_SETPAGESIZE,0, (LPARAM) 1);
     SendMessage(hwndTBFriction, TBM_SETSEL,(WPARAM) FALSE,(LPARAM) MAKELONG(0, 100)); 
     SendMessage(hwndTBFriction, TBM_SETPOS,(WPARAM) TRUE,(LPARAM) 55);
+    
+    CreateWindow(_T("static"), _T("Spring Force 2\t%"), WS_CHILD | WS_VISIBLE, 5, 143, 130, 20, hWnd, NULL, hInstance, NULL);
+    hwndEBSpring2 = CreateWindow(_T("Edit"), _T("55"), WS_CHILD | WS_VISIBLE | ES_LEFT | ES_NUMBER | ES_READONLY, 135, 143, 30, 20, hWnd, NULL, hInstance, NULL);
+    hwndTBSpring2 = CreateWindow(TRACKBAR_CLASS, NULL, WS_CHILD | WS_VISIBLE | TBS_ENABLESELRANGE, 168, 143, 290, 20, hWnd, NULL, hInstance, NULL);
+    SendMessage(hwndTBSpring2, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(0, 70));
+    SendMessage(hwndTBSpring2, TBM_SETPAGESIZE, 0, (LPARAM)1);
+    SendMessage(hwndTBSpring2, TBM_SETSEL, (WPARAM)FALSE, (LPARAM)MAKELONG(0, 70));
+    SendMessage(hwndTBSpring2, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)55);
 
-    CreateWindow(_T("static"),_T("Damper Force 2\t%"),WS_CHILD|WS_VISIBLE,5,143,130,20,hWnd,NULL,hInstance,NULL);
-    hwndEBDamper2=CreateWindow(_T("Edit"),_T("55"),WS_CHILD|WS_VISIBLE|ES_LEFT|ES_NUMBER|ES_READONLY,135,143,30,20,hWnd,NULL,hInstance,NULL);
-    hwndTBDamper2=CreateWindow(TRACKBAR_CLASS,NULL,WS_CHILD|WS_VISIBLE |TBS_ENABLESELRANGE,168,143,290,20,hWnd,NULL,hInstance,NULL);
+    CreateWindow(_T("static"),_T("Damper Force 2\t%"),WS_CHILD|WS_VISIBLE,5,163,130,20,hWnd,NULL,hInstance,NULL);
+    hwndEBDamper2=CreateWindow(_T("Edit"),_T("55"),WS_CHILD|WS_VISIBLE|ES_LEFT|ES_NUMBER|ES_READONLY,135,163,30,20,hWnd,NULL,hInstance,NULL);
+    hwndTBDamper2=CreateWindow(TRACKBAR_CLASS,NULL,WS_CHILD|WS_VISIBLE |TBS_ENABLESELRANGE,168,163,290,20,hWnd,NULL,hInstance,NULL);
     SendMessage(hwndTBDamper2, TBM_SETRANGE,(WPARAM) TRUE,(LPARAM) MAKELONG(0, 100));
     SendMessage(hwndTBDamper2, TBM_SETPAGESIZE,0, (LPARAM) 1);
     SendMessage(hwndTBDamper2, TBM_SETSEL,(WPARAM) FALSE,(LPARAM) MAKELONG(0, 100)); 
     SendMessage(hwndTBDamper2, TBM_SETPOS,(WPARAM) TRUE,(LPARAM) 55);
 
-    CreateWindow(_T("static"),_T("Friction Force 2\t%"),WS_CHILD|WS_VISIBLE,5,163,130,20,hWnd,NULL,hInstance,NULL);
-    hwndEBFriction2=CreateWindow(_T("Edit"),_T("55"),WS_CHILD|WS_VISIBLE|ES_LEFT|ES_NUMBER|ES_READONLY,135,163,30,20,hWnd,NULL,hInstance,NULL);
-    hwndTBFriction2=CreateWindow(TRACKBAR_CLASS,NULL,WS_CHILD|WS_VISIBLE |TBS_ENABLESELRANGE,168,163,290,20,hWnd,NULL,hInstance,NULL);
+    CreateWindow(_T("static"),_T("Friction Force 2\t%"),WS_CHILD|WS_VISIBLE,5,183,130,20,hWnd,NULL,hInstance,NULL);
+    hwndEBFriction2=CreateWindow(_T("Edit"),_T("55"),WS_CHILD|WS_VISIBLE|ES_LEFT|ES_NUMBER|ES_READONLY,135,183,30,20,hWnd,NULL,hInstance,NULL);
+    hwndTBFriction2=CreateWindow(TRACKBAR_CLASS,NULL,WS_CHILD|WS_VISIBLE |TBS_ENABLESELRANGE,168,183,290,20,hWnd,NULL,hInstance,NULL);
     SendMessage(hwndTBFriction2, TBM_SETRANGE,(WPARAM) TRUE,(LPARAM) MAKELONG(0, 100));
     SendMessage(hwndTBFriction2, TBM_SETPAGESIZE,0, (LPARAM) 1);
     SendMessage(hwndTBFriction2, TBM_SETSEL,(WPARAM) FALSE,(LPARAM) MAKELONG(0, 100)); 
     SendMessage(hwndTBFriction2, TBM_SETPOS,(WPARAM) TRUE,(LPARAM) 55);
 
-    hwndCHSwap=CreateWindow(_T("button"),_T("Swap Axis"),WS_CHILD|WS_VISIBLE|BS_CHECKBOX|BS_LEFTTEXT,3,189,90,20,hWnd,NULL,hInstance,NULL);
-    hwndLInitDInput = CreateWindow(_T("static"), _T("Init dinput"), WS_CHILD | WS_VISIBLE | ES_CENTER, 100, 189, 70, 20, hWnd, NULL, hInstance, NULL);
-    hwndCBInitDInput = CreateWindow(_T("combobox"), _T(""), CBS_DROPDOWNLIST | WS_VSCROLL | WS_CHILD | WS_VISIBLE | ES_CENTER, 173, 185, 150, 300, hWnd, NULL, hInstance, NULL);
+    hwndCHSwap=CreateWindow(_T("button"),_T("Swap Axis"),WS_CHILD|WS_VISIBLE|BS_CHECKBOX|BS_LEFTTEXT,3,209,90,20,hWnd,NULL,hInstance,NULL);
+    hwndLInitDInput = CreateWindow(_T("static"), _T("Init dinput"), WS_CHILD | WS_VISIBLE | ES_CENTER, 100, 209, 70, 20, hWnd, NULL, hInstance, NULL);
+    hwndCBInitDInput = CreateWindow(_T("combobox"), _T(""), CBS_DROPDOWNLIST | WS_VSCROLL | WS_CHILD | WS_VISIBLE | ES_CENTER, 173, 205, 150, 300, hWnd, NULL, hInstance, NULL);
    
    return TRUE;
 }
@@ -377,6 +388,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             TCHAR* tmp = new TCHAR[10];
             _stprintf(tmp, _T("%i"), jopt.spring);
             Edit_SetText(hwndEBSpring, tmp);
+            SetJtOptions(&jopt);
+        }
+        else if ((HWND)lParam == hwndTBSpring2) {
+            jopt.spring2 = SendMessage(hwndTBSpring2, TBM_GETPOS, 0, 0);
+            TCHAR* tmp = new TCHAR[10];
+            _stprintf(tmp, _T("%i"), jopt.spring2);
+            Edit_SetText(hwndEBSpring2, tmp);
             SetJtOptions(&jopt);
         }
         else if ((HWND)lParam == hwndTBDamper2) {
@@ -512,6 +530,8 @@ void InitAll(BOOL firstrun)
     _stprintf(tmp,_T("%i"),jopt.friction);
     Edit_SetText(hwndEBFriction,tmp);
 
+    _stprintf(tmp, _T("%i"), jopt.spring2);
+    Edit_SetText(hwndEBSpring2, tmp);
     _stprintf(tmp,_T("%i"),jopt.damper2);
     Edit_SetText(hwndEBDamper2,tmp);
     _stprintf(tmp,_T("%i"),jopt.friction2);
@@ -520,6 +540,7 @@ void InitAll(BOOL firstrun)
     SendMessage(hwndTBSpring, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) jopt.spring);
     SendMessage(hwndTBDamper, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) jopt.damper);
     SendMessage(hwndTBFriction, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) jopt.friction);
+    SendMessage(hwndTBSpring2, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)jopt.spring2);
     SendMessage(hwndTBDamper2, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) jopt.damper2);
     SendMessage(hwndTBFriction2, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) jopt.friction2);
 
