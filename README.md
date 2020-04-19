@@ -13,6 +13,7 @@ Originally developed by average_pilot and posted to the ED forums (https://forum
 * **Separate Spring/Damper/Friction Settings**: allows for independent settings for instantaneous trimmer on/off.
   * **Spring Force / Damper Force / Friction Force**: applied when instantaneous trimmer on.
   * **Spring Force 2 / Damper Force 2 / Friction Force 2**: applied when instantaneous trimmer off.
+* **Progressive Trim POV Hat Dropdown**: select the joystick POV hat you want to use for trimming.
 * **Save dinput Key**: saves the selected dinput re-initialization key in the options file.
 * **Cycle Trim Key**: cycles through the various trim modes.
 
