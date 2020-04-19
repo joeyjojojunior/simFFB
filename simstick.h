@@ -12,6 +12,7 @@
 #define MAXSTICKS 32
 #define MAXBUTTONS 32
 
+
 typedef struct _sticks {
     TCHAR name[MAX_PATH];
     LPDIRECTINPUTDEVICE8 dev;
@@ -35,6 +36,7 @@ typedef struct options {
     int windowY;        // y-coordinate of last window position
     byte swap;          // swap axes
     byte trimmode;      // no trim - only instant - only progressive - both
+    byte g_bSpring;       // spring force status
 } stoptions;
 
 //-----------------------------------------------------------------------------

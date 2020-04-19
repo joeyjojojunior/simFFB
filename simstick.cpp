@@ -49,6 +49,7 @@ stoptions g_Opt={
     0,      // y-coordinate of last window position
     true,   // swap axes        
     1,      // no trim - only instant - only progressive - both 
+    1,      // spring force status
 };       
 
 //Private functions
@@ -678,8 +679,7 @@ HRESULT SetDeviceSpring()
 
     if (g_pEffectSpring2)
         g_pEffectSpring2->SetParameters(&eff, DIEP_TYPESPECIFICPARAMS);
-
-    if (g_bSpring == 1) {
+    if (g_Opt.g_bSpring == 1) {
         if (g_pEffectSpring2) g_pEffectSpring2->Stop();
         if (g_pEffectSpring) g_pEffectSpring->Start(1, 0);
         if (g_pEffectDamper2) g_pEffectDamper2->Stop();
@@ -774,27 +774,27 @@ void JoystickStuffIT()  //IT -> instantaneous trimming
         return;
 
     // Handle force trim toggle
-    if (g_bBoton[g_Opt.btrimToggle] == DOWN && (g_bSpring)) { // Switch to spring force 2 if force trim toggle button was pressed
-        g_bSpring = 0;
+    if (g_bBoton[g_Opt.btrimToggle] == DOWN && (g_Opt.g_bSpring)) { // Switch to spring force 2 if force trim toggle button was pressed
+        g_Opt.g_bSpring = 0;
         is_centered = false;
         SetDeviceSpring();
     } else if (g_bBoton[g_Opt.btrimToggle] == UP && !is_centered) {  // Update spring center if trim toggle button pressed & joystick un-centered
-        g_bSpring = 1;
+        g_Opt.g_bSpring = 1;
         InstantTrim();
         is_centered = true;
     }
 
     // Handle center trim
-    if (g_bBoton[g_Opt.btrimCenter] == DOWN && (g_bSpring)) { // Trim center
+    if (g_bBoton[g_Opt.btrimCenter] == DOWN && (g_Opt.g_bSpring)) { // Trim center
         CenterTrim();
     }
 
     // Handle hold trim
-    if ((g_bBoton[g_Opt.btrimHold] == DOWN) && (g_bSpring)) { //Switch to spring force 2 if trim button is down
-        g_bSpring = 0;
+    if ((g_bBoton[g_Opt.btrimHold] == DOWN) && (g_Opt.g_bSpring)) { //Switch to spring force 2 if trim button is down
+        g_Opt.g_bSpring = 0;
         SetDeviceSpring();
     } else if (g_bBoton[g_Opt.btrimHold] == RELEASED) { //Update spring center if trim button is released
-        g_bSpring = 1;
+        g_Opt.g_bSpring = 1;
         InstantTrim();
     }
 }
@@ -802,7 +802,7 @@ void JoystickStuffIT()  //IT -> instantaneous trimming
 void JoystickStuffPT()  //PT -> progressive trimming
 {
 
-    if (0==g_bSpring)
+    if (0 == g_Opt.g_bSpring)
         return; //Do nothing if the trimming button is down
     if (FAILED(poll(g_Sticks[g_Opt.jPOV].dev,&g_js)))
         return;
@@ -909,10 +909,11 @@ void SetJtOptions(stoptions *so)
     g_Opt.spring2 = so->spring2 * 100;
     g_Opt.iKey = so->iKey;
     g_Opt.ctKey = so->ctKey;
-    g_Opt.swap=so->swap;
-    g_Opt.trimmode=so->trimmode;
     g_Opt.windowX = so->windowX;
     g_Opt.windowY = so->windowY;
+    g_Opt.swap=so->swap;
+    g_Opt.trimmode=so->trimmode;
+    g_Opt.g_bSpring = so->g_bSpring;
     SetDeviceConditions();
 }
 
@@ -927,10 +928,11 @@ void GetJtOptions(stoptions *so)
     so->friction2=g_Opt.friction2/100;
     so->iKey = g_Opt.iKey;
     so->ctKey = g_Opt.ctKey;
-    so->swap=g_Opt.swap;
-    so->trimmode=g_Opt.trimmode;
     so->windowX = g_Opt.windowX;
     so->windowY = g_Opt.windowY;
+    so->swap=g_Opt.swap;
+    so->trimmode=g_Opt.trimmode;
+    so->g_bSpring = g_Opt.g_bSpring;
 }
 
 BOOL LoadOptionsFromFile()
@@ -950,6 +952,8 @@ BOOL LoadOptionsFromFile()
         return false;
     }
     ReadFile(fhnd,&tmpopt,sizeof(stoptions),&r,NULL);
+    // Always want Spring Force 1 on startup
+    tmpopt.g_bSpring = 1;
     SetJtOptions(&tmpopt);
     CloseHandle(fhnd);
     return true;

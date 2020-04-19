@@ -39,9 +39,11 @@ HWND hwndCBTrimHold;   // Combobox for trim hold button
 HWND hwndCBTrimToggle; // Combobox for trim toggle button
 HWND hwndCBTrimCenter; // Combobox for trim center button
 
+HWND hwndLBSpring; // Label for spring force
 HWND hwndTBSpring,hwndTBDamper,hwndTBFriction; //Track bar for spring, damper and friction strenght
 HWND hwndEBSpring,hwndEBDamper,hwndEBFriction; //read-only edit boxes to show strenght percentage
 
+HWND hwndLBSpring2; // Label for spring 2 force
 HWND hwndTBSpring2; // Track bar for spring 2 force
 HWND hwndEBSpring2;  // Read-only edit box to show strength percentage
 
@@ -114,6 +116,21 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
                     JoystickStuffIT();
                 if (g_ptrim)
                     JoystickStuffPT();
+                
+                GetJtOptions(&jopt);
+                if (jopt.g_bSpring) {
+                    SetWindowText(hwndLBSpring, L"Spring Force *\t%");
+                    SetWindowText(hwndLBSpring2, L"Spring Force 2\t%");
+                    RedrawWindow(hwndLBSpring, NULL, NULL, RDW_ERASE);
+                    RedrawWindow(hwndLBSpring2, NULL, NULL, RDW_ERASE);
+                }
+                else {
+                    SetWindowText(hwndLBSpring, L"Spring Force\t%");
+                    SetWindowText(hwndLBSpring2, L"Spring Force 2 *\t%");
+                    RedrawWindow(hwndLBSpring, NULL, NULL, RDW_ERASE);
+                    RedrawWindow(hwndLBSpring2, NULL, NULL, RDW_ERASE);
+
+                }
 
                 iKeyState = GetAsyncKeyState(jopt.iKey);
                 if ((1 << 16) & iKeyState)
@@ -128,7 +145,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
                     switch (trimMode) {
                         case 0: 
                             SendMessage(hwndRDTrimNone, BM_CLICK, BST_CHECKED, 1); 
-                            break;
+                            break; 
                         case 1: 
                             SendMessage(hwndRDTrimInst, BM_CLICK, BST_CHECKED, 1); 
                             break;
@@ -148,8 +165,6 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     FreeDirectInput();
     return (int) msg.wParam;
 }
-
-
 
 //
 //  FUNCTION: MyRegisterClass()
@@ -241,7 +256,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
     CreateWindow(_T("static"),_T("SimFFB"),WS_CHILD|WS_VISIBLE|WS_BORDER|ES_CENTER,309,55,140,20,hWnd,NULL,hInstance,NULL);
     
-    CreateWindow(_T("static"),_T("Spring Force\t%"),WS_CHILD|WS_VISIBLE,5,83,130,20,hWnd,NULL,hInstance,NULL);
+    hwndLBSpring = CreateWindow(_T("static"),_T("Spring Force\t%"),WS_CHILD|WS_VISIBLE,5,83,130,20,hWnd,NULL,hInstance,NULL);
     hwndEBSpring=CreateWindow(_T("Edit"),_T("55"),WS_CHILD|WS_VISIBLE|ES_LEFT|ES_NUMBER|ES_READONLY,135,83,30,20,hWnd,NULL,hInstance,NULL);
     hwndTBSpring=CreateWindow(TRACKBAR_CLASS,NULL,WS_CHILD|WS_VISIBLE|TBS_ENABLESELRANGE,168,83,290,20,hWnd,NULL,hInstance,NULL);
     SendMessage(hwndTBSpring, TBM_SETRANGE,(WPARAM) TRUE,(LPARAM) MAKELONG(0, 100));
@@ -265,7 +280,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     SendMessage(hwndTBFriction, TBM_SETSEL,(WPARAM) FALSE,(LPARAM) MAKELONG(0, 100)); 
     SendMessage(hwndTBFriction, TBM_SETPOS,(WPARAM) TRUE,(LPARAM) 55);
     
-    CreateWindow(_T("static"), _T("Spring Force 2\t%"), WS_CHILD | WS_VISIBLE, 5, 143, 130, 20, hWnd, NULL, hInstance, NULL);
+    hwndLBSpring2 = CreateWindow(_T("static"), _T("Spring Force 2\t%"), WS_CHILD | WS_VISIBLE, 5, 143, 130, 20, hWnd, NULL, hInstance, NULL);
     hwndEBSpring2 = CreateWindow(_T("Edit"), _T("55"), WS_CHILD | WS_VISIBLE | ES_LEFT | ES_NUMBER | ES_READONLY, 135, 143, 30, 20, hWnd, NULL, hInstance, NULL);
     hwndTBSpring2 = CreateWindow(TRACKBAR_CLASS, NULL, WS_CHILD | WS_VISIBLE | TBS_ENABLESELRANGE, 168, 143, 290, 20, hWnd, NULL, hInstance, NULL);
     SendMessage(hwndTBSpring2, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(0, 70));
@@ -503,22 +518,22 @@ void InitAll(BOOL firstrun)
 
     switch (jopt.trimmode) {
         case 0:
-            SendMessage(hwndRDTrimNone,BM_CLICK,(WPARAM)BST_CHECKED,1);
+            SendMessage(hwndRDTrimNone,BM_SETCHECK,(WPARAM)BST_CHECKED,1);
             g_itrim=false;
             g_ptrim=false;
             break;
         case 1:
-            SendMessage(hwndRDTrimInst, BM_CLICK, (WPARAM)BST_CHECKED, 1);
+            SendMessage(hwndRDTrimInst, BM_SETCHECK, (WPARAM)BST_CHECKED, 1);
             g_itrim=true;
             g_ptrim=false;
             break;
         case 2: 
-            SendMessage(hwndRDTrimProg, BM_CLICK, (WPARAM)BST_CHECKED, 1);
+            SendMessage(hwndRDTrimProg, BM_SETCHECK, (WPARAM)BST_CHECKED, 1);
             g_itrim=false;
             g_ptrim=true;
             break;
         case 3: 
-            SendMessage(hwndRDTrimBoth, BM_CLICK, (WPARAM)BST_CHECKED, 1);
+            SendMessage(hwndRDTrimBoth, BM_SETCHECK, (WPARAM)BST_CHECKED, 1);
             g_itrim=true;
             g_ptrim=true;
             break;
