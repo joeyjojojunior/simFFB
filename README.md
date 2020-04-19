@@ -23,6 +23,10 @@ Originally developed by average_pilot and posted to the ED forums (https://forum
   * **Instant:** Trims instantly using button presses, typically used for helicopter trim.
   * **Progressive:** Use a POV hat to trim in increments, typically used for airplane trim.
   * **Both:** Both instant and progressive trim modes are active.
+* **Force Types**
+  * **Spring Force**: Provides a centering force to the joystick.
+  * **Damper Force**: Increases force on the joystick proportional to how fast you move it.
+  * **Friction Force**: Applies a uniform force on the joystick. 
 * **Spring Force 2/Damper Force 2/Friction Force 2**
   * This second set of FFB force settings are used in conjunction with the instant or both trim mode. They allow you to switch between two different force profiles with the button assignments documented below. Setting Spring Force 2 to zero will replicate helicopter like trimming in instant trim mode. 
 * **Hold/Toggle/Center Button Assignments**
