@@ -44,6 +44,9 @@ stoptions g_Opt={
     5000,   // dampering level (force trim off)
     0,      // friction level (force trim off)
     0,      // key for reinitializing dinput
+    0,      // key for cycling trim
+    0,      // x-coordinate of last window position
+    0,      // y-coordinate of last window position
     true,   // swap axes        
     1,      // no trim - only instant - only progressive - both 
 };       
@@ -905,6 +908,7 @@ void SetJtOptions(stoptions *so)
     g_Opt.spring=so->spring*100;
     g_Opt.spring2 = so->spring2 * 100;
     g_Opt.iKey = so->iKey;
+    g_Opt.ctKey = so->ctKey;
     g_Opt.swap=so->swap;
     g_Opt.trimmode=so->trimmode;
     g_Opt.windowX = so->windowX;
@@ -922,6 +926,7 @@ void GetJtOptions(stoptions *so)
     so->friction=g_Opt.friction/100;
     so->friction2=g_Opt.friction2/100;
     so->iKey = g_Opt.iKey;
+    so->ctKey = g_Opt.iKey;
     so->swap=g_Opt.swap;
     so->trimmode=g_Opt.trimmode;
     so->windowX = g_Opt.windowX;

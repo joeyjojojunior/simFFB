@@ -30,6 +30,7 @@ typedef struct options {
     int damper2;        // dampering level (force trim off)
     int friction2;      // friction level (force trim off)
     int iKey;           // key for reinitializing dinput
+    int ctKey;          // key for cycling trim
     int windowX;        // x-coordinate of last window position
     int windowY;        // y-coordinate of last window position
     byte swap;          // swap axes

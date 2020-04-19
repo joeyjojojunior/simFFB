@@ -22,7 +22,7 @@ TCHAR szTitle[MAX_LOADSTRING];                    // The title bar text
 TCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 HWND g_hwnd;
 const int WIN_HEIGHT = 473;
-const int WIN_WIDTH = 350;
+const int WIN_WIDTH = 325;
 HMENU g_hm;
 int g_Init=1;  //flag for first run to call the initialization function
 BOOL g_ptrim=false; //Progressive trimming flag
@@ -270,14 +270,18 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     SendMessage(hwndTBFriction2, TBM_SETPOS,(WPARAM) TRUE,(LPARAM) 55);
 
     CreateWindow(_T("static"), _T("Trim\t"), WS_CHILD | WS_VISIBLE, 5, 210, 130, 20, hWnd, NULL, hInstance, NULL);
-    hwndRDTrimNone = CreateWindow(L"Button", L"None", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 165, 205, 70, 30, hWnd, NULL, hInstance, NULL);
-    hwndRDTrimProg = CreateWindow(L"Button", L"Progressive", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 225, 205, 100, 30, hWnd, NULL, hInstance, NULL);
-    hwndRDTrimInst = CreateWindow(L"Button", L"Instant", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 330, 205, 70, 30, hWnd, NULL, hInstance, NULL);
-    hwndRDTrimBoth = CreateWindow(L"Button", L"Both", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 400, 205, 70, 30, hWnd, NULL, hInstance, NULL);
+    hwndRDTrimNone = CreateWindow(L"Button", L"None", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 45, 204, 70, 30, hWnd, NULL, hInstance, NULL);
+    hwndRDTrimProg = CreateWindow(L"Button", L"Progressive", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 105, 204, 100, 30, hWnd, NULL, hInstance, NULL);
+    hwndRDTrimInst = CreateWindow(L"Button", L"Instant", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 210, 204, 70, 30, hWnd, NULL, hInstance, NULL);
+    hwndRDTrimBoth = CreateWindow(L"Button", L"Both", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 280, 204, 70, 30, hWnd, NULL, hInstance, NULL);
 
-    hwndCHSwap=CreateWindow(_T("button"),_T("Swap Axis"),WS_CHILD|WS_VISIBLE|BS_CHECKBOX|BS_LEFTTEXT,3,300,90,20,hWnd,NULL,hInstance,NULL);
-    hwndLInitDInput = CreateWindow(_T("static"), _T("Init dinput"), WS_CHILD | WS_VISIBLE | ES_CENTER, 100, 300, 70, 20, hWnd, NULL, hInstance, NULL);
-    hwndCBInitDInput = CreateWindow(_T("combobox"), _T(""), CBS_DROPDOWNLIST | WS_VSCROLL | WS_CHILD | WS_VISIBLE | ES_CENTER, 173, 300, 150, 300, hWnd, NULL, hInstance, NULL);
+    hwndCHSwap=CreateWindow(_T("button"),_T("Swap Axis"),WS_CHILD|WS_VISIBLE|BS_CHECKBOX|BS_LEFTTEXT,3,239,90,20,hWnd,NULL,hInstance,NULL);
+    // Init dinput hotkey 
+    CreateWindow(_T("static"), _T("Init"), WS_CHILD | WS_VISIBLE | ES_CENTER, 90, 239, 40, 20, hWnd, NULL, hInstance, NULL);
+    hwndCBInitDInput = CreateWindow(_T("combobox"), _T(""), CBS_DROPDOWNLIST | WS_VSCROLL | WS_CHILD | WS_VISIBLE | ES_CENTER, 130, 235, 140, 300, hWnd, NULL, hInstance, NULL);
+    // Cycle trim hotkey 
+    CreateWindow(_T("static"), _T("Trim"), WS_CHILD | WS_VISIBLE | ES_CENTER, 270, 239, 40, 20, hWnd, NULL, hInstance, NULL);
+    hwndCBInitDInput = CreateWindow(_T("combobox"), _T(""), CBS_DROPDOWNLIST | WS_VSCROLL | WS_CHILD | WS_VISIBLE | ES_CENTER, 310, 235, 140, 300, hWnd, NULL, hInstance, NULL);
     return TRUE;
 }
 
