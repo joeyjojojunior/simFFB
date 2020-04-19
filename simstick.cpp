@@ -926,7 +926,7 @@ void GetJtOptions(stoptions *so)
     so->friction=g_Opt.friction/100;
     so->friction2=g_Opt.friction2/100;
     so->iKey = g_Opt.iKey;
-    so->ctKey = g_Opt.iKey;
+    so->ctKey = g_Opt.ctKey;
     so->swap=g_Opt.swap;
     so->trimmode=g_Opt.trimmode;
     so->windowX = g_Opt.windowX;

@@ -57,8 +57,8 @@ HWND hwndRDTrimInst; // Radio button for instant trim
 HWND hwndRDTrimBoth; // Radio button for both trim
 
 HWND hwndCHSwap; //Swap axes chechbox
-HWND hwndLInitDInput; //Label
 HWND hwndCBInitDInput; //Set key for init dinput
+HWND hwndCBCycleTrim;  //Set key for cycle trim
 std::vector<int> initDinputKeyCodes; //Key codes
 
 // Forward declarations of functions included in this code module:
@@ -119,6 +119,26 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
                 if ((1 << 16) & iKeyState)
                 {
                     InitAll(false);
+                }
+                
+                iKeyState = GetAsyncKeyState(jopt.ctKey);
+                if ((1 << 16) & iKeyState) {  
+                    int trimMode = (jopt.trimmode + 1) % 4;
+                    int a;
+                    switch (trimMode) {
+                        case 0: 
+                            SendMessage(hwndRDTrimNone, BM_CLICK, BST_CHECKED, 1); 
+                            break;
+                        case 1: 
+                            SendMessage(hwndRDTrimInst, BM_CLICK, BST_CHECKED, 1); 
+                            break;
+                        case 2: 
+                            SendMessage(hwndRDTrimProg, BM_CLICK, BST_CHECKED, 1); 
+                            break;
+                        case 3: 
+                            SendMessage(hwndRDTrimBoth, BM_CLICK, BST_CHECKED, 1); 
+                            break;
+                    }
                 }
             }
             Sleep(50);
@@ -271,9 +291,9 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
     CreateWindow(_T("static"), _T("Trim\t"), WS_CHILD | WS_VISIBLE, 5, 210, 130, 20, hWnd, NULL, hInstance, NULL);
     hwndRDTrimNone = CreateWindow(L"Button", L"None", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 45, 204, 70, 30, hWnd, NULL, hInstance, NULL);
-    hwndRDTrimProg = CreateWindow(L"Button", L"Progressive", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 105, 204, 100, 30, hWnd, NULL, hInstance, NULL);
-    hwndRDTrimInst = CreateWindow(L"Button", L"Instant", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 210, 204, 70, 30, hWnd, NULL, hInstance, NULL);
-    hwndRDTrimBoth = CreateWindow(L"Button", L"Both", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 280, 204, 70, 30, hWnd, NULL, hInstance, NULL);
+    hwndRDTrimInst = CreateWindow(L"Button", L"Instant", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 115, 204, 70, 30, hWnd, NULL, hInstance, NULL);
+    hwndRDTrimProg = CreateWindow(L"Button", L"Progressive", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 195, 204, 100, 30, hWnd, NULL, hInstance, NULL);
+    hwndRDTrimBoth = CreateWindow(L"Button", L"Both", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 310, 204, 70, 30, hWnd, NULL, hInstance, NULL);
 
     hwndCHSwap=CreateWindow(_T("button"),_T("Swap Axis"),WS_CHILD|WS_VISIBLE|BS_CHECKBOX|BS_LEFTTEXT,3,239,90,20,hWnd,NULL,hInstance,NULL);
     // Init dinput hotkey 
@@ -281,7 +301,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     hwndCBInitDInput = CreateWindow(_T("combobox"), _T(""), CBS_DROPDOWNLIST | WS_VSCROLL | WS_CHILD | WS_VISIBLE | ES_CENTER, 130, 235, 140, 300, hWnd, NULL, hInstance, NULL);
     // Cycle trim hotkey 
     CreateWindow(_T("static"), _T("Trim"), WS_CHILD | WS_VISIBLE | ES_CENTER, 270, 239, 40, 20, hWnd, NULL, hInstance, NULL);
-    hwndCBInitDInput = CreateWindow(_T("combobox"), _T(""), CBS_DROPDOWNLIST | WS_VSCROLL | WS_CHILD | WS_VISIBLE | ES_CENTER, 310, 235, 140, 300, hWnd, NULL, hInstance, NULL);
+    hwndCBCycleTrim = CreateWindow(_T("combobox"), _T(""), CBS_DROPDOWNLIST | WS_VSCROLL | WS_CHILD | WS_VISIBLE | ES_CENTER, 310, 235, 140, 300, hWnd, NULL, hInstance, NULL);
     return TRUE;
 }
 
@@ -317,6 +337,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 if (!(z > initDinputKeyCodes.size()) && !(z < 0))
                 {
                     jopt.iKey = initDinputKeyCodes.at(z);
+                }
+            }
+            if ((HWND)lParam == hwndCBCycleTrim) {
+                int z;
+                z = ComboBox_GetCurSel(hwndCBCycleTrim);
+
+                if (!(z > initDinputKeyCodes.size()) && !(z < 0))
+                {
+                    jopt.ctKey = initDinputKeyCodes.at(z);
                 }
             }
             break;
@@ -474,22 +503,22 @@ void InitAll(BOOL firstrun)
 
     switch (jopt.trimmode) {
         case 0:
-            SendMessage(hwndRDTrimNone,BM_SETCHECK,(WPARAM)BST_CHECKED,NULL);
+            SendMessage(hwndRDTrimNone,BM_CLICK,(WPARAM)BST_CHECKED,1);
             g_itrim=false;
             g_ptrim=false;
             break;
         case 1:
-            SendMessage(hwndRDTrimInst, BM_SETCHECK, (WPARAM)BST_CHECKED, NULL);
+            SendMessage(hwndRDTrimInst, BM_CLICK, (WPARAM)BST_CHECKED, 1);
             g_itrim=true;
             g_ptrim=false;
             break;
         case 2: 
-            SendMessage(hwndRDTrimProg, BM_SETCHECK, (WPARAM)BST_CHECKED, NULL);
+            SendMessage(hwndRDTrimProg, BM_CLICK, (WPARAM)BST_CHECKED, 1);
             g_itrim=false;
             g_ptrim=true;
             break;
         case 3: 
-            SendMessage(hwndRDTrimBoth, BM_SETCHECK, (WPARAM)BST_CHECKED, NULL);
+            SendMessage(hwndRDTrimBoth, BM_CLICK, (WPARAM)BST_CHECKED, 1);
             g_itrim=true;
             g_ptrim=true;
             break;
@@ -503,25 +532,31 @@ void InitAll(BOOL firstrun)
     }
 
     //Fill combobox with keys
-    int savedKeyIndex = -1; // find index of key if saved in opt file
+    int savedKeyIndexInit = -1; // find index of key if saved in opt file
+    int savedKeyIndexTrim = -1; // find index of key if saved in opt file
     if (firstrun)
     {
         ComboBox_ResetContent(hwndCBInitDInput);
+        ComboBox_ResetContent(hwndCBCycleTrim);
 
         for (int i = 0; i < keymap.keys.size(); i++) {
             if (keymap.keys.at(i).second == jopt.iKey)
-                savedKeyIndex = i;
+                savedKeyIndexInit = i;
+            if (keymap.keys.at(i).second == jopt.ctKey)
+                savedKeyIndexTrim = i;
             std::string* str = &keymap.keys.at(i).first;
             TCHAR* kName = new TCHAR[str->length() + 1];
             kName[str->length()] = 0;
             std::copy(str->begin(), str->end(), kName);
             ComboBox_AddString(hwndCBInitDInput, kName);
+            ComboBox_AddString(hwndCBCycleTrim, kName);
             initDinputKeyCodes.push_back(keymap.keys.at(i).second);
         }
     }
 
     // Set combobox to saved key
-    if (savedKeyIndex >= 0) ComboBox_SetCurSel(hwndCBInitDInput, savedKeyIndex);
+    if (savedKeyIndexInit >= 0) ComboBox_SetCurSel(hwndCBInitDInput, savedKeyIndexInit);
+    if (savedKeyIndexTrim >= 0) ComboBox_SetCurSel(hwndCBCycleTrim, savedKeyIndexTrim);
     
 
     int j,k,b,b2,b3;
