@@ -96,10 +96,10 @@ Input::Keymap::Keymap()
 	keys.push_back(std::make_pair("F10", 0x79));
 	keys.push_back(std::make_pair("F11", 0x7A));
 	keys.push_back(std::make_pair("F12", 0x7B));
-	keys.push_back(std::make_pair("Numlock", 0x5A));
-	keys.push_back(std::make_pair("ScrollLock", 0x5A));
-	keys.push_back(std::make_pair("LeftShift", 0x5A));
-	keys.push_back(std::make_pair("RightShift", 0x5A));
-	keys.push_back(std::make_pair("LeftControl", 0x5A));
-	keys.push_back(std::make_pair("RightContol", 0x5A));
+	keys.push_back(std::make_pair("Numlock", 0x90));
+	keys.push_back(std::make_pair("ScrollLock", 0x91));
+	keys.push_back(std::make_pair("LeftShift", 0xA0));
+	keys.push_back(std::make_pair("RightShift", 0xA1));
+	keys.push_back(std::make_pair("LeftControl", 0xA2));
+	keys.push_back(std::make_pair("RightControl", 0xA3));
 }

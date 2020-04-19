@@ -44,7 +44,9 @@ stoptions g_Opt={
     5000,   // dampering level (force trim off)
     0,      // friction level (force trim off)
     0,      // key for reinitializing dinput
+    {0, 0, 0, 0}, // modifier keys for init dinput key
     0,      // key for cycling trim
+    {0, 0, 0, 0}, // modifier keys for cycle trim key
     0,      // x-coordinate of last window position
     0,      // y-coordinate of last window position
     true,   // swap axes        
@@ -914,6 +916,12 @@ void SetJtOptions(stoptions *so)
     g_Opt.swap=so->swap;
     g_Opt.trimmode=so->trimmode;
     g_Opt.g_bSpring = so->g_bSpring;
+
+    for (int i = 0; i < 4; i++) {
+        g_Opt.iKeyMod[i] = so->iKeyMod[i];
+        g_Opt.ctKeyMod[i] = so->ctKeyMod[i]; 
+    }
+
     SetDeviceConditions();
 }
 
@@ -933,6 +941,12 @@ void GetJtOptions(stoptions *so)
     so->swap=g_Opt.swap;
     so->trimmode=g_Opt.trimmode;
     so->g_bSpring = g_Opt.g_bSpring;
+
+    for (int i = 0; i < 4; i++) {
+        int a = i;
+        so->iKeyMod[i] = g_Opt.iKeyMod[i];
+        so->ctKeyMod[i] = g_Opt.ctKeyMod[i];
+    }
 }
 
 BOOL LoadOptionsFromFile()
@@ -944,7 +958,7 @@ BOOL LoadOptionsFromFile()
 
     fhnd=CreateFile(OPTFILENAME,GENERIC_READ,0,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
     if (INVALID_HANDLE_VALUE==fhnd) {
-            return false;
+        return false;
     }
     ReadFile(fhnd,&mn,sizeof(mn),&r,NULL);
     if (mn!=MAGICNUMBER) {

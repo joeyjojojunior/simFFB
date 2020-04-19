@@ -24,6 +24,8 @@ HWND g_hwnd;
 const int WIN_HEIGHT = 473;
 const int WIN_WIDTH = 325;
 HMENU g_hm;
+UINT modMenuInit[4] = { ID_INIT_MOD_CTRL, ID_INIT_MOD_ALT, ID_INIT_MOD_SHIFT, ID_INIT_MOD_WIN };
+UINT modMenuTrim[4] = { ID_CYCLE_MOD_CTRL, ID_CYCLE_MOD_ALT, ID_CYCLE_MOD_SHIFT, ID_CYCLE_MOD_WIN };
 int g_Init=1;  //flag for first run to call the initialization function
 BOOL g_ptrim=false; //Progressive trimming flag
 BOOL g_itrim=true;  //Instantaneous trimming flag
@@ -70,6 +72,8 @@ LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 void InitAll(BOOL firstrun);
 void SetSwapCheckbox();
+void ToggleMenuModifier(UINT menuItem, int(&modArr)[4], int i);
+void InitMenuModifier(MENUITEMINFO mii, UINT menuItem, int(&modArr)[4], int i);
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
                      HINSTANCE hPrevInstance,
@@ -101,6 +105,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     // This kind of message loop allows to constantly poll the joystick (or whatever
     // it's needed to do constantly)
     // instead of having the application stopped waiting for events
+    GetJtOptions(&jopt);
     while(true) {
         if(::PeekMessage(&msg,0,0,0,PM_REMOVE)) { //Process events
              if (msg.message==WM_QUIT)
@@ -116,8 +121,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
                     JoystickStuffIT();
                 if (g_ptrim)
                     JoystickStuffPT();
-                
-                GetJtOptions(&jopt);
+
                 if (jopt.g_bSpring) {
                     SetWindowText(hwndLBSpring, L"Spring Force *\t%");
                     SetWindowText(hwndLBSpring2, L"Spring Force 2\t%");
@@ -135,7 +139,9 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
                 iKeyState = GetAsyncKeyState(jopt.iKey);
                 if ((1 << 16) & iKeyState)
                 {
-                    InitAll(false);
+                    //if (GetKeyState(VK_CONTROL) & 0x8000) {
+                        InitAll(false);
+                    //}
                 }
                 
                 iKeyState = GetAsyncKeyState(jopt.ctKey);
@@ -231,7 +237,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    UpdateWindow(hWnd);
 
    /////////////CONTROLS
-    CreateWindow(_T("static"),_T("Joystick / PT POV"),WS_CHILD|WS_VISIBLE,5,3,130,20,hWnd,NULL,hInstance,NULL);
+    CreateWindow(_T("static"),_T("Device for Buttons / Progressive Trim Hat"),WS_CHILD|WS_VISIBLE,5,3,290,20,hWnd,NULL,hInstance,NULL);
     CreateWindow(_T("static"),_T("Hold"),WS_CHILD|WS_VISIBLE,305,3,130,20,hWnd,NULL,hInstance,NULL);
     CreateWindow(_T("static"),_T("Toggle"),WS_CHILD|WS_VISIBLE,355,3,130,20,hWnd,NULL,hInstance,NULL);
     CreateWindow(_T("static"),_T("Center"),WS_CHILD|WS_VISIBLE,405,3,130,20,hWnd,NULL,hInstance,NULL);
@@ -408,8 +414,32 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case IDM_ABOUT:
             DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
             break;
-        case ID_OPTIONS_RE: //Reinitialize
+        case ID_OPTIONS_RE: // Reinitialize
             InitAll(false);
+            break;
+        case ID_INIT_MOD_CTRL:
+            ToggleMenuModifier(ID_INIT_MOD_CTRL, jopt.iKeyMod, 0);
+            break;
+        case ID_INIT_MOD_ALT:
+            ToggleMenuModifier(ID_INIT_MOD_ALT, jopt.iKeyMod, 1);
+            break;
+        case ID_INIT_MOD_SHIFT:
+            ToggleMenuModifier(ID_INIT_MOD_SHIFT, jopt.iKeyMod, 2);
+            break;
+        case ID_INIT_MOD_WIN:
+            ToggleMenuModifier(ID_INIT_MOD_WIN, jopt.iKeyMod, 3);
+            break;
+        case ID_CYCLE_MOD_CTRL:
+            ToggleMenuModifier(ID_CYCLE_MOD_CTRL, jopt.ctKeyMod, 0);
+            break;
+        case ID_CYCLE_MOD_ALT:
+            ToggleMenuModifier(ID_CYCLE_MOD_ALT, jopt.ctKeyMod, 1);
+            break;
+        case ID_CYCLE_MOD_SHIFT:
+            ToggleMenuModifier(ID_CYCLE_MOD_SHIFT, jopt.ctKeyMod, 2);
+            break;
+        case ID_CYCLE_MOD_WIN:
+            ToggleMenuModifier(ID_CYCLE_MOD_WIN, jopt.ctKeyMod, 3);
             break;
         case IDM_EXIT:
             DestroyWindow(hWnd);
@@ -503,6 +533,10 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 void InitAll(BOOL firstrun)
 {
+    MENUITEMINFO mii;
+    mii.cbSize = sizeof(MENUITEMINFO);
+    mii.fMask = MIIM_STATE;
+
     if (!firstrun) {
         FreeDirectInput();
         Sleep(100);
@@ -514,7 +548,6 @@ void InitAll(BOOL firstrun)
 
     // Fetch JtOptions again since we polled for devices in InitDirectInput
     GetJtOptions(&jopt);
-    EnableMenuItem(g_hm,ID_OPTIONS_RE,MF_ENABLED);
 
     switch (jopt.trimmode) {
         case 0:
@@ -606,6 +639,11 @@ void InitAll(BOOL firstrun)
 
     if (jopt.swap)
         SetSwapCheckbox();
+
+    for (int i = 0; i < sizeof(modMenuInit) / sizeof(modMenuInit[0]); i++) {
+        InitMenuModifier(mii, modMenuInit[i], jopt.iKeyMod, i);
+        InitMenuModifier(mii, modMenuTrim[i], jopt.ctKeyMod, i);
+    }
 }
 
 void SetSwapCheckbox()
@@ -614,4 +652,27 @@ void SetSwapCheckbox()
         SendMessage(hwndCHSwap,BM_SETCHECK,(WPARAM)BST_CHECKED,NULL);
     else
         SendMessage(hwndCHSwap,BM_SETCHECK,(WPARAM)BST_UNCHECKED,NULL);
+}
+
+void ToggleMenuModifier(UINT menuItem, int (&modArr)[4], int i) {
+    MENUITEMINFO mii;
+    mii.cbSize = sizeof(MENUITEMINFO);
+    mii.fMask = MIIM_STATE;
+
+    if (modArr[i] == 0) {
+        mii.fState = MFS_CHECKED;
+    }
+    else {
+        mii.fState = MFS_UNCHECKED;
+    }
+    modArr[i] = (modArr[i] == 0) ? 1 : 0;
+
+    SetMenuItemInfo(g_hm, menuItem, FALSE, &mii);
+    SetJtOptions(&jopt);
+}
+
+void InitMenuModifier(MENUITEMINFO mii, UINT menuItem, int(&modArr)[4], int i) {
+    mii.fState = modArr[i] == 0 ? MFS_UNCHECKED : MFS_CHECKED;
+    SetMenuItemInfo(g_hm, menuItem, FALSE, &mii);
+    SetJtOptions(&jopt);
 }

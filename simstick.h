@@ -31,12 +31,14 @@ typedef struct options {
     int damper2;        // dampering level (force trim off)
     int friction2;      // friction level (force trim off)
     int iKey;           // key for reinitializing dinput
+    int iKeyMod[4];     // modifiers for init key
     int ctKey;          // key for cycling trim
+    int ctKeyMod[4];    // modifiers for cycle trim key
     int windowX;        // x-coordinate of last window position
     int windowY;        // y-coordinate of last window position
     byte swap;          // swap axes
     byte trimmode;      // no trim - only instant - only progressive - both
-    byte g_bSpring;       // spring force status
+    byte g_bSpring;     // spring force status
 } stoptions;
 
 //-----------------------------------------------------------------------------

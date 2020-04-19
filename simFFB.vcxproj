@@ -145,7 +145,6 @@
   <ItemGroup>
     <None Include="ReadMe.txt" />
     <None Include="simFFB.ico" />
-    <None Include="small.ico" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Keymap.h" />
