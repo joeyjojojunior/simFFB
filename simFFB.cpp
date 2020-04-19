@@ -49,6 +49,11 @@ HWND hwndEBDamper2; // Read-only edit box to show strength percentage
 HWND hwndTBFriction2; // Track bar for friction 2 strength
 HWND hwndEBFriction2; // Read-only edit box to show strength percentage
 
+HWND hwndRDTrimNone; // Radio button for no trim
+HWND hwndRDTrimProg; // Radio button for progressive trim
+HWND hwndRDTrimInst; // Radio button for instant trim
+HWND hwndRDTrimBoth; // Radio button for both trim
+
 HWND hwndCHSwap; //Swap axes chechbox
 HWND hwndLInitDInput; //Label
 HWND hwndCBInitDInput; //Set key for init dinput
@@ -174,7 +179,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
    hInst = hInstance; // Store instance handle in our global variable
 
-   hWnd = CreateWindow(szWindowClass, szTitle, WS_SYSMENU|WS_CAPTION|WS_MINIMIZEBOX|WS_DLGFRAME,CW_USEDEFAULT, 0, 473, 292, NULL, NULL, hInstance, NULL);
+   hWnd = CreateWindow(szWindowClass, szTitle, WS_SYSMENU|WS_CAPTION|WS_MINIMIZEBOX|WS_DLGFRAME,CW_USEDEFAULT, 0, 473, 350, NULL, NULL, hInstance, NULL);
   
 
    if (!hWnd)
@@ -259,9 +264,15 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     SendMessage(hwndTBFriction2, TBM_SETSEL,(WPARAM) FALSE,(LPARAM) MAKELONG(0, 100)); 
     SendMessage(hwndTBFriction2, TBM_SETPOS,(WPARAM) TRUE,(LPARAM) 55);
 
-    hwndCHSwap=CreateWindow(_T("button"),_T("Swap Axis"),WS_CHILD|WS_VISIBLE|BS_CHECKBOX|BS_LEFTTEXT,3,209,90,20,hWnd,NULL,hInstance,NULL);
-    hwndLInitDInput = CreateWindow(_T("static"), _T("Init dinput"), WS_CHILD | WS_VISIBLE | ES_CENTER, 100, 209, 70, 20, hWnd, NULL, hInstance, NULL);
-    hwndCBInitDInput = CreateWindow(_T("combobox"), _T(""), CBS_DROPDOWNLIST | WS_VSCROLL | WS_CHILD | WS_VISIBLE | ES_CENTER, 173, 205, 150, 300, hWnd, NULL, hInstance, NULL);
+    CreateWindow(_T("static"), _T("Trim\t"), WS_CHILD | WS_VISIBLE, 5, 210, 130, 20, hWnd, NULL, hInstance, NULL);
+    hwndRDTrimNone = CreateWindow(L"Button", L"None", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 165, 205, 70, 30, hWnd, NULL, hInstance, NULL);
+    hwndRDTrimProg = CreateWindow(L"Button", L"Progressive", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 225, 205, 100, 30, hWnd, NULL, hInstance, NULL);
+    hwndRDTrimInst = CreateWindow(L"Button", L"Instant", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 330, 205, 70, 30, hWnd, NULL, hInstance, NULL);
+    hwndRDTrimBoth = CreateWindow(L"Button", L"Both", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 400, 205, 70, 30, hWnd, NULL, hInstance, NULL);
+
+    hwndCHSwap=CreateWindow(_T("button"),_T("Swap Axis"),WS_CHILD|WS_VISIBLE|BS_CHECKBOX|BS_LEFTTEXT,3,300,90,20,hWnd,NULL,hInstance,NULL);
+    hwndLInitDInput = CreateWindow(_T("static"), _T("Init dinput"), WS_CHILD | WS_VISIBLE | ES_CENTER, 100, 300, 70, 20, hWnd, NULL, hInstance, NULL);
+    hwndCBInitDInput = CreateWindow(_T("combobox"), _T(""), CBS_DROPDOWNLIST | WS_VSCROLL | WS_CHILD | WS_VISIBLE | ES_CENTER, 173, 300, 150, 300, hWnd, NULL, hInstance, NULL);
    
    return TRUE;
 }
@@ -312,11 +323,32 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case BN_CLICKED:
             if ((HWND)lParam==hwndCHSwap) {
                 jopt.swap=!jopt.swap;
-                SetJtOptions(&jopt);
                 SetSwapCheckbox();
             }
+
+            if ((HWND)lParam == hwndRDTrimNone) {
+                g_itrim = false;
+                g_ptrim = false;
+                jopt.trimmode = 0;
+            }
+            else if ((HWND)lParam == hwndRDTrimInst) {
+                g_itrim = true;
+                g_ptrim = false;
+                jopt.trimmode = 1;
+            }
+            else if ((HWND)lParam == hwndRDTrimProg) {
+                g_itrim = false;
+                g_ptrim = true;
+                jopt.trimmode = 2;
+            }
+            else if ((HWND)lParam == hwndRDTrimBoth) {
+                g_itrim = true;
+                g_ptrim = true;
+                jopt.trimmode = 3;
+            }
+
+            SetJtOptions(&jopt);
             break;
-        
         }
         // Parse the menu selections:
         switch (wmId)
@@ -326,46 +358,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
         case ID_OPTIONS_RE: //Reinitialize
             InitAll(false);
-            break;
-        case ID_OPTIONS_NT: //No trimming
-            g_itrim=false;
-            g_ptrim=false;
-            CheckMenuItem(g_hm,ID_OPTIONS_NT,MF_CHECKED);
-            CheckMenuItem(g_hm,ID_OPTIONS_IT,MF_UNCHECKED);
-            CheckMenuItem(g_hm,ID_OPTIONS_PT,MF_UNCHECKED);
-            CheckMenuItem(g_hm,ID_OPTIONS_BT,MF_UNCHECKED);
-            jopt.trimmode=0;
-            SetJtOptions(&jopt);
-            break;
-        case ID_OPTIONS_IT: //Trimming mode instantaneous
-            g_itrim=true;
-            g_ptrim=false;
-            CheckMenuItem(g_hm,ID_OPTIONS_NT,MF_UNCHECKED);
-            CheckMenuItem(g_hm,ID_OPTIONS_IT,MF_CHECKED);
-            CheckMenuItem(g_hm,ID_OPTIONS_PT,MF_UNCHECKED);
-            CheckMenuItem(g_hm,ID_OPTIONS_BT,MF_UNCHECKED);
-            jopt.trimmode=1;
-            SetJtOptions(&jopt);
-            break;
-        case ID_OPTIONS_PT: //Trimming mode progressive
-            g_ptrim=true;
-            g_itrim=false;
-            CheckMenuItem(g_hm,ID_OPTIONS_NT,MF_UNCHECKED);
-            CheckMenuItem(g_hm,ID_OPTIONS_IT,MF_UNCHECKED);
-            CheckMenuItem(g_hm,ID_OPTIONS_PT,MF_CHECKED);
-            CheckMenuItem(g_hm,ID_OPTIONS_BT,MF_UNCHECKED);
-            jopt.trimmode=2;
-            SetJtOptions(&jopt);
-            break;
-        case ID_OPTIONS_BT: //Both trimming modes
-            g_itrim=true;
-            g_ptrim=true;
-            CheckMenuItem(g_hm,ID_OPTIONS_NT,MF_UNCHECKED);
-            CheckMenuItem(g_hm,ID_OPTIONS_IT,MF_UNCHECKED);
-            CheckMenuItem(g_hm,ID_OPTIONS_PT,MF_UNCHECKED);
-            CheckMenuItem(g_hm,ID_OPTIONS_BT,MF_CHECKED);
-            jopt.trimmode=3;
-            SetJtOptions(&jopt);
             break;
         case IDM_EXIT:
             DestroyWindow(hWnd);
@@ -466,20 +458,22 @@ void InitAll(BOOL firstrun)
 
     switch (jopt.trimmode) {
         case 0:
-            CheckMenuItem(g_hm,ID_OPTIONS_NT,MF_CHECKED);
+            SendMessage(hwndRDTrimNone,BM_SETCHECK,(WPARAM)BST_CHECKED,NULL);
             g_itrim=false;
             g_ptrim=false;
             break;
         case 1:
-            CheckMenuItem(g_hm,ID_OPTIONS_IT,MF_CHECKED);
+            SendMessage(hwndRDTrimInst, BM_SETCHECK, (WPARAM)BST_CHECKED, NULL);
             g_itrim=true;
             g_ptrim=false;
             break;
-        case 2: CheckMenuItem(g_hm,ID_OPTIONS_PT,MF_CHECKED);
+        case 2: 
+            SendMessage(hwndRDTrimProg, BM_SETCHECK, (WPARAM)BST_CHECKED, NULL);
             g_itrim=false;
             g_ptrim=true;
             break;
-        case 3: CheckMenuItem(g_hm,ID_OPTIONS_BT,MF_CHECKED);
+        case 3: 
+            SendMessage(hwndRDTrimBoth, BM_SETCHECK, (WPARAM)BST_CHECKED, NULL);
             g_itrim=true;
             g_ptrim=true;
             break;
