@@ -30,6 +30,8 @@ typedef struct options {
     int damper2;        // dampering level (force trim off)
     int friction2;      // friction level (force trim off)
     int iKey;           // key for reinitializing dinput
+    int windowX;        // x-coordinate of last window position
+    int windowY;        // y-coordinate of last window position
     byte swap;          // swap axes
     byte trimmode;      // no trim - only instant - only progressive - both
 } stoptions;
@@ -54,6 +56,7 @@ void SetTrimmer(int,int,int,int,int);
 void GetTrimmer(int&,int&,int&,int&,int&);
 void SetJtOptions(stoptions *);
 void GetJtOptions(stoptions *);
+BOOL LoadOptionsFromFile();
 
 
 //-----------------------------------------------------------------------------

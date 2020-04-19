@@ -21,6 +21,8 @@ HINSTANCE hInst;                                // current instance
 TCHAR szTitle[MAX_LOADSTRING];                    // The title bar text
 TCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 HWND g_hwnd;
+const int WIN_HEIGHT = 473;
+const int WIN_WIDTH = 350;
 HMENU g_hm;
 int g_Init=1;  //flag for first run to call the initialization function
 BOOL g_ptrim=false; //Progressive trimming flag
@@ -178,8 +180,11 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    HWND hWnd;
 
    hInst = hInstance; // Store instance handle in our global variable
-
-   hWnd = CreateWindow(szWindowClass, szTitle, WS_SYSMENU|WS_CAPTION|WS_MINIMIZEBOX|WS_DLGFRAME,CW_USEDEFAULT, 0, 473, 350, NULL, NULL, hInstance, NULL);
+   
+   // Load saved options so we can move the window if needed
+   LoadOptionsFromFile();
+   GetJtOptions(&jopt);
+   hWnd = CreateWindow(szWindowClass, szTitle, WS_SYSMENU|WS_CAPTION|WS_MINIMIZEBOX|WS_DLGFRAME, jopt.windowX, jopt.windowY, WIN_HEIGHT, WIN_WIDTH, NULL, NULL, hInstance, NULL);
   
 
    if (!hWnd)
@@ -273,8 +278,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     hwndCHSwap=CreateWindow(_T("button"),_T("Swap Axis"),WS_CHILD|WS_VISIBLE|BS_CHECKBOX|BS_LEFTTEXT,3,300,90,20,hWnd,NULL,hInstance,NULL);
     hwndLInitDInput = CreateWindow(_T("static"), _T("Init dinput"), WS_CHILD | WS_VISIBLE | ES_CENTER, 100, 300, 70, 20, hWnd, NULL, hInstance, NULL);
     hwndCBInitDInput = CreateWindow(_T("combobox"), _T(""), CBS_DROPDOWNLIST | WS_VSCROLL | WS_CHILD | WS_VISIBLE | ES_CENTER, 173, 300, 150, 300, hWnd, NULL, hInstance, NULL);
-   
-   return TRUE;
+    return TRUE;
 }
 
 //
@@ -371,7 +375,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         // TODO: Add any drawing code here...
         EndPaint(hWnd, &ps);
         break;
+    case WM_QUIT:
+        // Save window position
+        break;
     case WM_DESTROY:
+        RECT hWndRect;
+        GetWindowRect(hWnd, &hWndRect);
+        jopt.windowX = hWndRect.left;
+        jopt.windowY = hWndRect.top;
+        SetJtOptions(&jopt);
         PostQuitMessage(0);
         break;
     case WM_HSCROLL:
@@ -452,8 +464,8 @@ void InitAll(BOOL firstrun)
         return;
     StartEffects();
 
+    // Fetch JtOptions again since we polled for devices in InitDirectInput
     GetJtOptions(&jopt);
-
     EnableMenuItem(g_hm,ID_OPTIONS_RE,MF_ENABLED);
 
     switch (jopt.trimmode) {

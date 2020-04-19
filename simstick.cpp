@@ -137,7 +137,8 @@ HRESULT InitDirectInput(HWND hCon)
                           _T("FFConst"), MB_ICONERROR | MB_OK );
         return S_OK;
     }
-    
+   
+    // Have to load options again since we finally polled for devices and have the list
     LoadOptionsFromFile();
 
     // Set the data format to "simple joystick" - a predefined data format. A
@@ -906,6 +907,8 @@ void SetJtOptions(stoptions *so)
     g_Opt.iKey = so->iKey;
     g_Opt.swap=so->swap;
     g_Opt.trimmode=so->trimmode;
+    g_Opt.windowX = so->windowX;
+    g_Opt.windowY = so->windowY;
     SetDeviceConditions();
 }
 
@@ -921,6 +924,8 @@ void GetJtOptions(stoptions *so)
     so->iKey = g_Opt.iKey;
     so->swap=g_Opt.swap;
     so->trimmode=g_Opt.trimmode;
+    so->windowX = g_Opt.windowX;
+    so->windowY = g_Opt.windowY;
 }
 
 BOOL LoadOptionsFromFile()
