@@ -140,8 +140,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
                 
                 iKeyState = GetAsyncKeyState(jopt.ctKey);
                 if ((1 << 16) & iKeyState) {  
-                    int trimMode = (jopt.trimmode + 1) % 4;
-                    int a;
+                    int trimMode = (jopt.trimmode + 1) % 4;              
                     switch (trimMode) {
                         case 0: 
                             SendMessage(hwndRDTrimNone, BM_CLICK, BST_CHECKED, 1); 
@@ -231,7 +230,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    UpdateWindow(hWnd);
 
    /////////////CONTROLS
-    CreateWindow(_T("static"),_T("Joystick / PT POV"),WS_CHILD|WS_VISIBLE,5,3,130,20,hWnd,NULL,hInstance,NULL);
+    CreateWindow(_T("static"),_T("Joystick Button/POV"),WS_CHILD|WS_VISIBLE,5,3,130,20,hWnd,NULL,hInstance,NULL);
     CreateWindow(_T("static"),_T("Hold"),WS_CHILD|WS_VISIBLE,305,3,130,20,hWnd,NULL,hInstance,NULL);
     CreateWindow(_T("static"),_T("Toggle"),WS_CHILD|WS_VISIBLE,355,3,130,20,hWnd,NULL,hInstance,NULL);
     CreateWindow(_T("static"),_T("Center"),WS_CHILD|WS_VISIBLE,405,3,130,20,hWnd,NULL,hInstance,NULL);
@@ -240,9 +239,9 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     hwndCBTrimToggle = CreateWindow(_T("combobox"), TEXT(""), CBS_DROPDOWNLIST | WS_VSCROLL | WS_CHILD | WS_VISIBLE, 355, 23, 50, 255, hWnd, NULL, hInstance, NULL);
     hwndCBTrimCenter = CreateWindow(_T("combobox"), TEXT(""), CBS_DROPDOWNLIST | WS_VSCROLL | WS_CHILD | WS_VISIBLE, 405, 23, 50, 255, hWnd, NULL, hInstance, NULL);
 
-    TCHAR *b=new TCHAR[10];
+    TCHAR *b=new TCHAR[11];
     for (int i=0;i<32;i++) {
-        _stprintf(b,_T("%i"),i+1);
+        _stprintf_s(b, 11, _T("%i"),i+1);
         ComboBox_AddString(hwndCBTrimHold,b);
         ComboBox_AddString(hwndCBTrimToggle, b);
         ComboBox_AddString(hwndCBTrimCenter, b);
@@ -312,11 +311,11 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
     hwndCHSwap=CreateWindow(_T("button"),_T("Swap Axis"),WS_CHILD|WS_VISIBLE|BS_CHECKBOX|BS_LEFTTEXT,3,239,90,20,hWnd,NULL,hInstance,NULL);
     // Init dinput hotkey 
-    CreateWindow(_T("static"), _T("Init"), WS_CHILD | WS_VISIBLE | ES_CENTER, 90, 239, 40, 20, hWnd, NULL, hInstance, NULL);
-    hwndCBInitDInput = CreateWindow(_T("combobox"), _T(""), CBS_DROPDOWNLIST | WS_VSCROLL | WS_CHILD | WS_VISIBLE | ES_CENTER, 130, 235, 140, 300, hWnd, NULL, hInstance, NULL);
-    // Cycle trim hotkey 
-    CreateWindow(_T("static"), _T("Trim"), WS_CHILD | WS_VISIBLE | ES_CENTER, 270, 239, 40, 20, hWnd, NULL, hInstance, NULL);
-    hwndCBCycleTrim = CreateWindow(_T("combobox"), _T(""), CBS_DROPDOWNLIST | WS_VSCROLL | WS_CHILD | WS_VISIBLE | ES_CENTER, 310, 235, 140, 300, hWnd, NULL, hInstance, NULL);
+    CreateWindow(_T("static"), _T("Init Key"), WS_CHILD | WS_VISIBLE | ES_CENTER, 80, 239, 80, 20, hWnd, NULL, hInstance, NULL);
+    hwndCBInitDInput = CreateWindow(_T("combobox"), _T(""), CBS_DROPDOWNLIST | WS_VSCROLL | WS_CHILD | WS_VISIBLE | ES_CENTER, 150, 235, 110, 300, hWnd, NULL, hInstance, NULL);
+    // Cycle trim hotkey
+    CreateWindow(_T("static"), _T("Trim Mode"), WS_CHILD | WS_VISIBLE | ES_CENTER, 265, 239, 80, 20, hWnd, NULL, hInstance, NULL);
+    hwndCBCycleTrim = CreateWindow(_T("combobox"), _T(""), CBS_DROPDOWNLIST | WS_VSCROLL | WS_CHILD | WS_VISIBLE | ES_CENTER, 345, 235, 110, 300, hWnd, NULL, hInstance, NULL);
     return TRUE;
 }
 
@@ -344,9 +343,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         switch (wmEvent) {
         case CBN_CLOSEUP:
+            unsigned int z;
             if ((HWND)lParam == hwndCBInitDInput)
             {
-            int z;
             z = ComboBox_GetCurSel(hwndCBInitDInput);
 
                 if (!(z > initDinputKeyCodes.size()) && !(z < 0))
@@ -355,7 +354,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
             }
             if ((HWND)lParam == hwndCBCycleTrim) {
-                int z;
                 z = ComboBox_GetCurSel(hwndCBCycleTrim);
 
                 if (!(z > initDinputKeyCodes.size()) && !(z < 0))
@@ -437,42 +435,42 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_HSCROLL:
         if ((HWND)lParam == hwndTBSpring) {
             jopt.spring = SendMessage(hwndTBSpring, TBM_GETPOS, 0, 0);
-            TCHAR* tmp = new TCHAR[10];
-            _stprintf(tmp, _T("%i"), jopt.spring);
+            TCHAR* tmp = new TCHAR[11];
+            _stprintf_s(tmp, 11, _T("%i"), jopt.spring);
             Edit_SetText(hwndEBSpring, tmp);
             SetJtOptions(&jopt);
         }
         else if ((HWND)lParam == hwndTBSpring2) {
             jopt.spring2 = SendMessage(hwndTBSpring2, TBM_GETPOS, 0, 0);
-            TCHAR* tmp = new TCHAR[10];
-            _stprintf(tmp, _T("%i"), jopt.spring2);
+            TCHAR* tmp = new TCHAR[11];
+            _stprintf_s(tmp, 11, _T("%i"), jopt.spring2);
             Edit_SetText(hwndEBSpring2, tmp);
             SetJtOptions(&jopt);
         }
         else if ((HWND)lParam == hwndTBDamper2) {
             jopt.damper2=SendMessage(hwndTBDamper2, TBM_GETPOS, 0, 0);
-            TCHAR *tmp=new TCHAR[10];
-            _stprintf(tmp,_T("%i"),jopt.damper2);
+            TCHAR *tmp=new TCHAR[11];
+            _stprintf_s(tmp,11, _T("%i"),jopt.damper2);
             Edit_SetText(hwndEBDamper2,tmp);
             SetJtOptions(&jopt);
             //break;
         } else if ((HWND)lParam==hwndTBDamper) {
             jopt.damper=SendMessage(hwndTBDamper, TBM_GETPOS, 0, 0);
-            TCHAR *tmp=new TCHAR[10];
-            _stprintf(tmp,_T("%i"),jopt.damper);
+            TCHAR *tmp=new TCHAR[11];
+            _stprintf_s(tmp, 11, _T("%i"),jopt.damper);
             Edit_SetText(hwndEBDamper,tmp);
             SetJtOptions(&jopt);
             //break;
         } else if ((HWND)lParam==hwndTBFriction) {
             jopt.friction=SendMessage(hwndTBFriction, TBM_GETPOS, 0, 0);
-            TCHAR *tmp=new TCHAR[10];
-            _stprintf(tmp,_T("%i"),jopt.friction);
+            TCHAR *tmp=new TCHAR[11];
+            _stprintf_s(tmp, 11, _T("%i"),jopt.friction);
             Edit_SetText(hwndEBFriction,tmp);
             SetJtOptions(&jopt);
         } else if ((HWND)lParam==hwndTBFriction2) {
             jopt.friction2=SendMessage(hwndTBFriction2, TBM_GETPOS, 0, 0);
-            TCHAR *tmp=new TCHAR[10];
-            _stprintf(tmp,_T("%i"),jopt.friction2);
+            TCHAR *tmp=new TCHAR[11];
+            _stprintf_s(tmp, 11, _T("%i"),jopt.friction2);
             Edit_SetText(hwndEBFriction2,tmp);
             SetJtOptions(&jopt);
         }
@@ -554,7 +552,7 @@ void InitAll(BOOL firstrun)
         ComboBox_ResetContent(hwndCBInitDInput);
         ComboBox_ResetContent(hwndCBCycleTrim);
 
-        for (int i = 0; i < keymap.keys.size(); i++) {
+        for (unsigned int i = 0; i < keymap.keys.size(); i++) {
             if (keymap.keys.at(i).second == jopt.iKey)
                 savedKeyIndexInit = i;
             if (keymap.keys.at(i).second == jopt.ctKey)
@@ -582,19 +580,19 @@ void InitAll(BOOL firstrun)
     ComboBox_SetCurSel(hwndCBTrimToggle, b2); 
     ComboBox_SetCurSel(hwndCBTrimCenter, b3); 
 
-    TCHAR *tmp=new TCHAR[10];
-    _stprintf(tmp,_T("%i"),jopt.spring);
+    TCHAR *tmp=new TCHAR[11];
+    _stprintf_s(tmp,11,_T("%i"),jopt.spring);
     Edit_SetText(hwndEBSpring,tmp);
-    _stprintf(tmp,_T("%i"),jopt.damper);
+    _stprintf_s(tmp,11,_T("%i"),jopt.damper);
     Edit_SetText(hwndEBDamper,tmp);
-    _stprintf(tmp,_T("%i"),jopt.friction);
+    _stprintf_s(tmp,11,_T("%i"),jopt.friction);
     Edit_SetText(hwndEBFriction,tmp);
 
-    _stprintf(tmp, _T("%i"), jopt.spring2);
+    _stprintf_s(tmp, 11,_T("%i"), jopt.spring2);
     Edit_SetText(hwndEBSpring2, tmp);
-    _stprintf(tmp,_T("%i"),jopt.damper2);
+    _stprintf_s(tmp,11,_T("%i"),jopt.damper2);
     Edit_SetText(hwndEBDamper2,tmp);
-    _stprintf(tmp,_T("%i"),jopt.friction2);
+    _stprintf_s(tmp,11,_T("%i"),jopt.friction2);
     Edit_SetText(hwndEBFriction2,tmp);
 
     SendMessage(hwndTBSpring, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) jopt.spring);

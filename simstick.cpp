@@ -844,8 +844,10 @@ void InstantTrim()
     if (FAILED(poll(g_pFFDevice,&g_js)))
         return;
 
-    g_nXForce = ((double)g_js.lX/65535)*20000-10000;  //Range has to be mapped from -65535,65535 to -10000,10000
-    g_nYForce = ((double)g_js.lY/65535)*20000-10000;
+    //g_nXForce = ((double)g_js.lX / 65535) * 20000 - 10000;  //Range has to be mapped from -65535,65535 to -10000,10000
+    //g_nYForce = ((double)g_js.lY / 65535) * 20000 - 10000;
+    g_nXForce = (INT)((((double)(g_js.lX) / 65535.0) * 20000.0) - 10000.0);  //Range has to be mapped from -65535,65535 to -10000,10000
+    g_nYForce = (INT)((((double)(g_js.lY) / 65535.0) * 20000.0) - 10000.0);
     SetDeviceSpring();
 }
 
@@ -855,8 +857,8 @@ void CenterTrim() {
         return;
     
     while (g_nXForce != 0) {
-        g_nXForce = g_nXForce / CENTER_DAMP_COEFF;
-        g_nYForce = g_nYForce / CENTER_DAMP_COEFF;
+        g_nXForce = (INT)(g_nXForce / CENTER_DAMP_COEFF);
+        g_nYForce = (INT)(g_nYForce / CENTER_DAMP_COEFF);
         SetDeviceSpring();
     }
     g_nYForce = 0;
