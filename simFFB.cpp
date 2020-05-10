@@ -145,33 +145,6 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
                         isLabelUpdatedHold = false;
                     }
                 }
-
-                iKeyState = GetAsyncKeyState(jopt.iKey);
-                if ((1 << 16) & iKeyState)
-                {
-                    //if (GetKeyState(VK_CONTROL) & 0x8000) {
-                        InitAll(false);
-                    //}
-                }
-                
-                iKeyState = GetAsyncKeyState(jopt.ctKey);
-                if ((1 << 16) & iKeyState) {  
-                    int trimMode = (jopt.trimmode + 1) % 4;              
-                    switch (trimMode) {
-                        case 0: 
-                            SendMessage(hwndRDTrimNone, BM_CLICK, BST_CHECKED, 1); 
-                            break; 
-                        case 1: 
-                            SendMessage(hwndRDTrimInst, BM_CLICK, BST_CHECKED, 1); 
-                            break;
-                        case 2: 
-                            SendMessage(hwndRDTrimProg, BM_CLICK, BST_CHECKED, 1); 
-                            break;
-                        case 3: 
-                            SendMessage(hwndRDTrimBoth, BM_CLICK, BST_CHECKED, 1); 
-                            break;
-                    }
-                }
             }
             Sleep(50);
         }
@@ -354,171 +327,201 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     switch (message)
     {
-    case WM_COMMAND:
-        wmId    = LOWORD(wParam);
-        wmEvent = HIWORD(wParam);
+        case WM_COMMAND:
+            wmId    = LOWORD(wParam);
+            wmEvent = HIWORD(wParam);
 
-        switch (wmEvent) {
-        case CBN_CLOSEUP:
-            unsigned int z;
-            if ((HWND)lParam == hwndCBInitDInput)
+            switch (wmEvent) {
+                case CBN_CLOSEUP:
+                    unsigned int z;
+                    if ((HWND)lParam == hwndCBInitDInput)
+                    {
+                    z = ComboBox_GetCurSel(hwndCBInitDInput);
+
+                        if (!(z > initDinputKeyCodes.size()) && !(z < 0))
+                        {
+                            jopt.iKey = initDinputKeyCodes.at(z);
+                        }
+                    }
+                    if ((HWND)lParam == hwndCBCycleTrim) {
+                        z = ComboBox_GetCurSel(hwndCBCycleTrim);
+
+                        if (!(z > initDinputKeyCodes.size()) && !(z < 0))
+                        {
+                            jopt.ctKey = initDinputKeyCodes.at(z);
+                        }
+                    }
+                    SetFocus(g_hwnd);
+                    break;
+                case CBN_SELCHANGE:
+                    jopt.jtrim=ComboBox_GetCurSel(hwndCBSticks);
+                    jopt.jPOV=ComboBox_GetCurSel(hwndCBSticksPOV);
+                    jopt.btrimHold=ComboBox_GetCurSel(hwndCBTrimHold); 
+                    jopt.btrimToggle=ComboBox_GetCurSel(hwndCBTrimToggle); 
+                    jopt.btrimCenter=ComboBox_GetCurSel(hwndCBTrimCenter); 
+                    SetJtOptions(&jopt);
+                    SetFocus(g_hwnd);
+                    break;
+                case BN_CLICKED:
+                    if ((HWND)lParam==hwndCHSwap) {
+                        jopt.swap=!jopt.swap;
+                        SetSwapCheckbox();
+                    }
+                    if ((HWND)lParam == hwndRDTrimNone) {
+                        g_itrim = false;
+                        g_ptrim = false;
+                        jopt.trimmode = 0;
+                        SendMessage(hwndRDTrimNone, BN_KILLFOCUS, BN_KILLFOCUS, 1);
+                    }
+                    else if ((HWND)lParam == hwndRDTrimInst) {
+                        g_itrim = true;
+                        g_ptrim = false;
+                        jopt.trimmode = 1;
+                        SendMessage(hwndRDTrimInst, BN_KILLFOCUS, BN_KILLFOCUS, 1);
+                    }
+                    else if ((HWND)lParam == hwndRDTrimProg) {
+                        g_itrim = false;
+                        g_ptrim = true;
+                        jopt.trimmode = 2;
+                        SendMessage(hwndRDTrimProg, BN_KILLFOCUS, BN_KILLFOCUS, 1);
+                    }
+                    else if ((HWND)lParam == hwndRDTrimBoth) {
+                        g_itrim = true;
+                        g_ptrim = true;
+                        jopt.trimmode = 3;
+                        SendMessage(hwndRDTrimBoth, BN_KILLFOCUS, BN_KILLFOCUS, 1);
+                    }
+                    SetJtOptions(&jopt);
+                    SetFocus(g_hwnd);
+                    break;
+            }
+
+            // Parse the menu selections:
+            switch (wmId)
             {
-            z = ComboBox_GetCurSel(hwndCBInitDInput);
-
-                if (!(z > initDinputKeyCodes.size()) && !(z < 0))
-                {
-                    jopt.iKey = initDinputKeyCodes.at(z);
+                case IDM_ABOUT:
+                    DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+                    break;
+                case ID_OPTIONS_RE: // Reinitialize
+                    InitAll(false);
+                    break;
+                case ID_INIT_MOD_CTRL:
+                    ToggleMenuModifier(ID_INIT_MOD_CTRL, jopt.iKeyMod, 0);
+                    break;
+                case ID_INIT_MOD_ALT:
+                    ToggleMenuModifier(ID_INIT_MOD_ALT, jopt.iKeyMod, 1);
+                    break;
+                case ID_INIT_MOD_SHIFT:
+                    ToggleMenuModifier(ID_INIT_MOD_SHIFT, jopt.iKeyMod, 2);
+                    break;
+                case ID_INIT_MOD_WIN:
+                    ToggleMenuModifier(ID_INIT_MOD_WIN, jopt.iKeyMod, 3);
+                    break;
+                case ID_CYCLE_MOD_CTRL:
+                    ToggleMenuModifier(ID_CYCLE_MOD_CTRL, jopt.ctKeyMod, 0);
+                    break;
+                case ID_CYCLE_MOD_ALT:
+                    ToggleMenuModifier(ID_CYCLE_MOD_ALT, jopt.ctKeyMod, 1);
+                    break;
+                case ID_CYCLE_MOD_SHIFT:
+                    ToggleMenuModifier(ID_CYCLE_MOD_SHIFT, jopt.ctKeyMod, 2);
+                    break;
+                case ID_CYCLE_MOD_WIN:
+                    ToggleMenuModifier(ID_CYCLE_MOD_WIN, jopt.ctKeyMod, 3);
+                    break;
+                case IDM_EXIT:
+                    DestroyWindow(hWnd);
+                    break;
+                default:
+                    return DefWindowProc(hWnd, message, wParam, lParam);
+            }
+            break;
+        case WM_KEYUP:
+            // Change trim mode hotkey
+            if (wParam == jopt.ctKey) {
+                int trimMode = (jopt.trimmode + 1) % 4;
+                switch (trimMode) {
+                    case 0:
+                        SendMessage(hwndRDTrimNone, BM_CLICK, BST_CHECKED, 1);
+                        break;
+                    case 1:
+                        SendMessage(hwndRDTrimInst, BM_CLICK, BST_CHECKED, 1);
+                        break;
+                    case 2:
+                        SendMessage(hwndRDTrimProg, BM_CLICK, BST_CHECKED, 1);
+                        break;
+                    case 3:
+                        SendMessage(hwndRDTrimBoth, BM_CLICK, BST_CHECKED, 1);
+                        break;
                 }
             }
-            if ((HWND)lParam == hwndCBCycleTrim) {
-                z = ComboBox_GetCurSel(hwndCBCycleTrim);
-
-                if (!(z > initDinputKeyCodes.size()) && !(z < 0))
-                {
-                    jopt.ctKey = initDinputKeyCodes.at(z);
-                }
+            else if (wParam == jopt.iKey) { // Init dInput hotkey
+                InitAll(false);
             }
             break;
-        case CBN_SELCHANGE:
-            jopt.jtrim=ComboBox_GetCurSel(hwndCBSticks);
-            jopt.jPOV=ComboBox_GetCurSel(hwndCBSticksPOV);
-            jopt.btrimHold=ComboBox_GetCurSel(hwndCBTrimHold); 
-            jopt.btrimToggle=ComboBox_GetCurSel(hwndCBTrimToggle); 
-            jopt.btrimCenter=ComboBox_GetCurSel(hwndCBTrimCenter); 
+        case WM_PAINT:
+            hdc = BeginPaint(hWnd, &ps);
+            // TODO: Add any drawing code here...
+            EndPaint(hWnd, &ps);
+            break;
+        case WM_QUIT:
+            // Save window position
+            break;
+        case WM_DESTROY:
+            RECT hWndRect;
+            GetWindowRect(hWnd, &hWndRect);
+            jopt.windowX = hWndRect.left;
+            jopt.windowY = hWndRect.top;
             SetJtOptions(&jopt);
+            PostQuitMessage(0);
             break;
-        case BN_CLICKED:
-            if ((HWND)lParam==hwndCHSwap) {
-                jopt.swap=!jopt.swap;
-                SetSwapCheckbox();
+        case WM_HSCROLL:
+            if ((HWND)lParam == hwndTBSpring) {
+                jopt.spring = SendMessage(hwndTBSpring, TBM_GETPOS, 0, 0);
+                TCHAR* tmp = new TCHAR[11];
+                _stprintf_s(tmp, 11, _T("%i"), jopt.spring);
+                Edit_SetText(hwndEBSpring, tmp);
+                SetJtOptions(&jopt);
             }
-
-            if ((HWND)lParam == hwndRDTrimNone) {
-                g_itrim = false;
-                g_ptrim = false;
-                jopt.trimmode = 0;
+            else if ((HWND)lParam == hwndTBSpring2) {
+                jopt.spring2 = SendMessage(hwndTBSpring2, TBM_GETPOS, 0, 0);
+                TCHAR* tmp = new TCHAR[11];
+                _stprintf_s(tmp, 11, _T("%i"), jopt.spring2);
+                Edit_SetText(hwndEBSpring2, tmp);
+                SetJtOptions(&jopt);
             }
-            else if ((HWND)lParam == hwndRDTrimInst) {
-                g_itrim = true;
-                g_ptrim = false;
-                jopt.trimmode = 1;
+            else if ((HWND)lParam == hwndTBDamper2) {
+                jopt.damper2=SendMessage(hwndTBDamper2, TBM_GETPOS, 0, 0);
+                TCHAR *tmp=new TCHAR[11];
+                _stprintf_s(tmp,11, _T("%i"),jopt.damper2);
+                Edit_SetText(hwndEBDamper2,tmp);
+                SetJtOptions(&jopt);
+                //break;
+            } else if ((HWND)lParam==hwndTBDamper) {
+                jopt.damper=SendMessage(hwndTBDamper, TBM_GETPOS, 0, 0);
+                TCHAR *tmp=new TCHAR[11];
+                _stprintf_s(tmp, 11, _T("%i"),jopt.damper);
+                Edit_SetText(hwndEBDamper,tmp);
+                SetJtOptions(&jopt);
+                //break;
+            } else if ((HWND)lParam==hwndTBFriction) {
+                jopt.friction=SendMessage(hwndTBFriction, TBM_GETPOS, 0, 0);
+                TCHAR *tmp=new TCHAR[11];
+                _stprintf_s(tmp, 11, _T("%i"),jopt.friction);
+                Edit_SetText(hwndEBFriction,tmp);
+                SetJtOptions(&jopt);
+            } else if ((HWND)lParam==hwndTBFriction2) {
+                jopt.friction2=SendMessage(hwndTBFriction2, TBM_GETPOS, 0, 0);
+                TCHAR *tmp=new TCHAR[11];
+                _stprintf_s(tmp, 11, _T("%i"),jopt.friction2);
+                Edit_SetText(hwndEBFriction2,tmp);
+                SetJtOptions(&jopt);
             }
-            else if ((HWND)lParam == hwndRDTrimProg) {
-                g_itrim = false;
-                g_ptrim = true;
-                jopt.trimmode = 2;
-            }
-            else if ((HWND)lParam == hwndRDTrimBoth) {
-                g_itrim = true;
-                g_ptrim = true;
-                jopt.trimmode = 3;
-            }
-
-            SetJtOptions(&jopt);
-            break;
-        }
-        // Parse the menu selections:
-        switch (wmId)
-        {
-        case IDM_ABOUT:
-            DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-            break;
-        case ID_OPTIONS_RE: // Reinitialize
-            InitAll(false);
-            break;
-        case ID_INIT_MOD_CTRL:
-            ToggleMenuModifier(ID_INIT_MOD_CTRL, jopt.iKeyMod, 0);
-            break;
-        case ID_INIT_MOD_ALT:
-            ToggleMenuModifier(ID_INIT_MOD_ALT, jopt.iKeyMod, 1);
-            break;
-        case ID_INIT_MOD_SHIFT:
-            ToggleMenuModifier(ID_INIT_MOD_SHIFT, jopt.iKeyMod, 2);
-            break;
-        case ID_INIT_MOD_WIN:
-            ToggleMenuModifier(ID_INIT_MOD_WIN, jopt.iKeyMod, 3);
-            break;
-        case ID_CYCLE_MOD_CTRL:
-            ToggleMenuModifier(ID_CYCLE_MOD_CTRL, jopt.ctKeyMod, 0);
-            break;
-        case ID_CYCLE_MOD_ALT:
-            ToggleMenuModifier(ID_CYCLE_MOD_ALT, jopt.ctKeyMod, 1);
-            break;
-        case ID_CYCLE_MOD_SHIFT:
-            ToggleMenuModifier(ID_CYCLE_MOD_SHIFT, jopt.ctKeyMod, 2);
-            break;
-        case ID_CYCLE_MOD_WIN:
-            ToggleMenuModifier(ID_CYCLE_MOD_WIN, jopt.ctKeyMod, 3);
-            break;
-        case IDM_EXIT:
-            DestroyWindow(hWnd);
-            break;
+            SetFocus(g_hwnd);
         default:
             return DefWindowProc(hWnd, message, wParam, lParam);
         }
-        break;
-    case WM_PAINT:
-        hdc = BeginPaint(hWnd, &ps);
-        // TODO: Add any drawing code here...
-        EndPaint(hWnd, &ps);
-        break;
-    case WM_QUIT:
-        // Save window position
-        break;
-    case WM_DESTROY:
-        RECT hWndRect;
-        GetWindowRect(hWnd, &hWndRect);
-        jopt.windowX = hWndRect.left;
-        jopt.windowY = hWndRect.top;
-        SetJtOptions(&jopt);
-        PostQuitMessage(0);
-        break;
-    case WM_HSCROLL:
-        if ((HWND)lParam == hwndTBSpring) {
-            jopt.spring = SendMessage(hwndTBSpring, TBM_GETPOS, 0, 0);
-            TCHAR* tmp = new TCHAR[11];
-            _stprintf_s(tmp, 11, _T("%i"), jopt.spring);
-            Edit_SetText(hwndEBSpring, tmp);
-            SetJtOptions(&jopt);
-        }
-        else if ((HWND)lParam == hwndTBSpring2) {
-            jopt.spring2 = SendMessage(hwndTBSpring2, TBM_GETPOS, 0, 0);
-            TCHAR* tmp = new TCHAR[11];
-            _stprintf_s(tmp, 11, _T("%i"), jopt.spring2);
-            Edit_SetText(hwndEBSpring2, tmp);
-            SetJtOptions(&jopt);
-        }
-        else if ((HWND)lParam == hwndTBDamper2) {
-            jopt.damper2=SendMessage(hwndTBDamper2, TBM_GETPOS, 0, 0);
-            TCHAR *tmp=new TCHAR[11];
-            _stprintf_s(tmp,11, _T("%i"),jopt.damper2);
-            Edit_SetText(hwndEBDamper2,tmp);
-            SetJtOptions(&jopt);
-            //break;
-        } else if ((HWND)lParam==hwndTBDamper) {
-            jopt.damper=SendMessage(hwndTBDamper, TBM_GETPOS, 0, 0);
-            TCHAR *tmp=new TCHAR[11];
-            _stprintf_s(tmp, 11, _T("%i"),jopt.damper);
-            Edit_SetText(hwndEBDamper,tmp);
-            SetJtOptions(&jopt);
-            //break;
-        } else if ((HWND)lParam==hwndTBFriction) {
-            jopt.friction=SendMessage(hwndTBFriction, TBM_GETPOS, 0, 0);
-            TCHAR *tmp=new TCHAR[11];
-            _stprintf_s(tmp, 11, _T("%i"),jopt.friction);
-            Edit_SetText(hwndEBFriction,tmp);
-            SetJtOptions(&jopt);
-        } else if ((HWND)lParam==hwndTBFriction2) {
-            jopt.friction2=SendMessage(hwndTBFriction2, TBM_GETPOS, 0, 0);
-            TCHAR *tmp=new TCHAR[11];
-            _stprintf_s(tmp, 11, _T("%i"),jopt.friction2);
-            Edit_SetText(hwndEBFriction2,tmp);
-            SetJtOptions(&jopt);
-        }
-    default:
-        return DefWindowProc(hWnd, message, wParam, lParam);
-    }
-    return 0;
+        return 0;
 }
 
 // Message handler for about box.
@@ -584,8 +587,6 @@ void InitAll(BOOL firstrun)
     ComboBox_ResetContent(hwndCBSticks);
     ComboBox_ResetContent(hwndCBSticksPOV);
     for (int k = 0; k < JoysticksNumber(); k++) {
-        LPCWSTR s = JoystickName(k);
-        printf("%s", s);
         if (wcscmp(JoystickName(k), L"Logitech G940 Joystick") == 0) {
             HICON hicon = (HICON)LoadImage(GetModuleHandleW(NULL), MAKEINTRESOURCE(IDI_G940_ICON),
                 IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR | LR_DEFAULTSIZE);
