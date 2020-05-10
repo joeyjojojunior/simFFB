@@ -70,8 +70,8 @@ BOOL LoadOptionsFromFile();
 #define SAFE_DELETE(p)  { if(p) { delete (p);     (p)=NULL; } }
 #define SAFE_RELEASE(p) { if(p) { (p)->Release(); (p)=NULL; } }
 
-#define ADDLIM(a,b,l) {a+=b; if (a>l) a=l;}  //addition with upper limit
-#define SUBLIM(a,b,l) {a-=b; if (a<l) a=l;}  //substraction with bottom limit
+#define ADDLIM(a,b,l) {a+=(INT)(b); if (a>l) a=l;}  //addition with upper limit
+#define SUBLIM(a,b,l) {a-=(INT)(b); if (a<l) a=l;}  //substraction with bottom limit
 #define UP    0
 #define DOWN 1
 #define RELEASED 2
