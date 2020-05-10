@@ -52,7 +52,6 @@ void StartEffects();
 void StopEffects();
 void JoystickStuffPT();
 void JoystickStuffIT();
-void NoSpring();
 void InstantTrim();
 void CenterTrim(); // Centers joystick & turns on spring
 int JoysticksNumber();

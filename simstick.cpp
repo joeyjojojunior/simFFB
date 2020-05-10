@@ -184,8 +184,8 @@ HRESULT InitDirectInput(HWND hCon)
     LONG            rglDirection[2] = { 0, 0 };
     int ax1,ax2;
     DICONDITION condition[2];
-
     ZeroMemory(&condition,sizeof(condition));
+
     if (g_Opt.swap) {
         ax1=0;
         ax2=1;
@@ -451,10 +451,11 @@ HRESULT SetDeviceForcesXY() //This function is part of the original sample but n
 HRESULT SetDeviceConditions()
 {
     LONG rglDirection[2] = {0, 0};
-    DICONDITION condition[2];
     DWORD           rgdwAxes[2]     = { DIJOFS_X, DIJOFS_Y };
     int ax1,ax2;
-    DIEFFECT eff;
+    DICONDITION condition[2];
+    ZeroMemory(&condition, sizeof(condition));
+
 
     if (g_Opt.swap) {
         ax1=0;
@@ -465,19 +466,7 @@ HRESULT SetDeviceConditions()
     }
     SetDeviceSpring();
 
-    // Friction
-    condition[ax1].lOffset=0;
-    condition[ax1].dwNegativeSaturation=g_Opt.friction;
-    condition[ax1].dwPositiveSaturation=g_Opt.friction;    
-    condition[ax1].lDeadBand=0;
-    condition[ax1].lNegativeCoefficient=g_Opt.friction;
-    condition[ax1].lPositiveCoefficient=g_Opt.friction;
-    condition[ax2].lOffset=0;
-    condition[ax2].dwNegativeSaturation=g_Opt.friction;
-    condition[ax2].dwPositiveSaturation=g_Opt.friction;
-    condition[ax2].lDeadBand=0;
-    condition[ax2].lNegativeCoefficient=g_Opt.friction;
-    condition[ax2].lPositiveCoefficient=g_Opt.friction;
+    DIEFFECT eff;
     ZeroMemory(&eff,sizeof(eff));
     eff.dwSize                    = sizeof(DIEFFECT);
     eff.dwFlags                    = DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS;
@@ -493,6 +482,20 @@ HRESULT SetDeviceConditions()
     eff.cbTypeSpecificParams    = sizeof(condition);
     eff.lpvTypeSpecificParams    = condition;
     eff.dwStartDelay            = 0;
+
+    // Friction
+    condition[ax1].lOffset=0;
+    condition[ax1].dwNegativeSaturation=g_Opt.friction;
+    condition[ax1].dwPositiveSaturation=g_Opt.friction;    
+    condition[ax1].lDeadBand=0;
+    condition[ax1].lNegativeCoefficient=g_Opt.friction;
+    condition[ax1].lPositiveCoefficient=g_Opt.friction;
+    condition[ax2].lOffset=0;
+    condition[ax2].dwNegativeSaturation=g_Opt.friction;
+    condition[ax2].dwPositiveSaturation=g_Opt.friction;
+    condition[ax2].lDeadBand=0;
+    condition[ax2].lNegativeCoefficient=g_Opt.friction;
+    condition[ax2].lPositiveCoefficient=g_Opt.friction;
 
     if (g_pEffectFricti)
         g_pEffectFricti->SetParameters(&eff,DIEP_TYPESPECIFICPARAMS);
@@ -510,22 +513,7 @@ HRESULT SetDeviceConditions()
     condition[ax2].lDeadBand=0;
     condition[ax2].lNegativeCoefficient=g_Opt.friction2;
     condition[ax2].lPositiveCoefficient=g_Opt.friction2;
-    ZeroMemory(&eff,sizeof(eff));
-    eff.dwSize                    = sizeof(DIEFFECT);
-    eff.dwFlags                    = DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS;
-    eff.dwDuration                = INFINITE;
-    eff.dwSamplePeriod            = 0;
-    eff.dwGain                    = DI_FFNOMINALMAX;
-    eff.dwTriggerButton            = DIEB_NOTRIGGER;
-    eff.dwTriggerRepeatInterval    = 0;
-    eff.cAxes                    = g_dwNumForceFeedbackAxis;
-    eff.rgdwAxes                = rgdwAxes;
-    eff.rglDirection            = rglDirection;
-    eff.lpEnvelope                = 0;
-    eff.cbTypeSpecificParams    = sizeof(condition);
-    eff.lpvTypeSpecificParams    = condition;
-    eff.dwStartDelay            = 0;
-
+   
     if (g_pEffectFricti2)
         g_pEffectFricti2->SetParameters(&eff,DIEP_TYPESPECIFICPARAMS);
 
@@ -542,22 +530,7 @@ HRESULT SetDeviceConditions()
     condition[ax2].lDeadBand=0;
     condition[ax2].lNegativeCoefficient=g_Opt.damper;
     condition[ax2].lPositiveCoefficient=g_Opt.damper;
-    ZeroMemory(&eff,sizeof(eff));
-    eff.dwSize                    = sizeof(DIEFFECT);
-    eff.dwFlags                    = DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS;
-    eff.dwDuration                = INFINITE;
-    eff.dwSamplePeriod            = 0;
-    eff.dwGain                    = DI_FFNOMINALMAX;
-    eff.dwTriggerButton            = DIEB_NOTRIGGER;
-    eff.dwTriggerRepeatInterval    = 0;
-    eff.cAxes                    = g_dwNumForceFeedbackAxis;
-    eff.rgdwAxes                = rgdwAxes;
-    eff.rglDirection            = rglDirection;
-    eff.lpEnvelope                = 0;
-    eff.cbTypeSpecificParams    = sizeof(condition);
-    eff.lpvTypeSpecificParams    = condition;
-    eff.dwStartDelay            = 0;
-
+   
     if (g_pEffectDamper)
         g_pEffectDamper->SetParameters(&eff,DIEP_TYPESPECIFICPARAMS);
     
@@ -574,22 +547,7 @@ HRESULT SetDeviceConditions()
     condition[ax2].lDeadBand=0;
     condition[ax2].lNegativeCoefficient=g_Opt.damper2;
     condition[ax2].lPositiveCoefficient=g_Opt.damper2;
-    ZeroMemory(&eff,sizeof(eff));
-    eff.dwSize                    = sizeof(DIEFFECT);
-    eff.dwFlags                    = DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS;
-    eff.dwDuration                = INFINITE;
-    eff.dwSamplePeriod            = 0;
-    eff.dwGain                    = DI_FFNOMINALMAX;
-    eff.dwTriggerButton            = DIEB_NOTRIGGER;
-    eff.dwTriggerRepeatInterval    = 0;
-    eff.cAxes                    = g_dwNumForceFeedbackAxis;
-    eff.rgdwAxes                = rgdwAxes;
-    eff.rglDirection            = rglDirection;
-    eff.lpEnvelope                = 0;
-    eff.cbTypeSpecificParams    = sizeof(condition);
-    eff.lpvTypeSpecificParams    = condition;
-    eff.dwStartDelay            = 0;
-
+  
     if (g_pEffectDamper2) 
         g_pEffectDamper2->SetParameters(&eff, DIEP_TYPESPECIFICPARAMS);
     
@@ -599,9 +557,11 @@ HRESULT SetDeviceConditions()
 HRESULT SetDeviceSpring()
 {
     LONG rglDirection[2] = {0, 0};
-    DICONDITION condition[2];
     DWORD           rgdwAxes[2]     = { DIJOFS_X, DIJOFS_Y };
     int ax1,ax2;
+
+    DICONDITION condition[2];
+    ZeroMemory(condition, sizeof(condition));
 
     if (g_Opt.swap) {
         ax1=0;
@@ -610,22 +570,6 @@ HRESULT SetDeviceSpring()
         ax1=1;
         ax2=0;
     }
-
-    // Spring 1
-    ZeroMemory(condition, sizeof(condition));
-    condition[ax1].lOffset = g_nYForce;
-    condition[ax1].dwNegativeSaturation = g_Opt.spring;
-    condition[ax1].dwPositiveSaturation = g_Opt.spring;
-    condition[ax1].lDeadBand = 0;
-    condition[ax1].lNegativeCoefficient = g_Opt.spring;
-    condition[ax1].lPositiveCoefficient = g_Opt.spring;
-
-    condition[ax2].lOffset = (g_Opt.swap ? -g_nXForce : g_nXForce);
-    condition[ax2].dwNegativeSaturation = g_Opt.spring;
-    condition[ax2].dwPositiveSaturation = g_Opt.spring;
-    condition[ax2].lDeadBand = 0;
-    condition[ax2].lNegativeCoefficient = g_Opt.spring;
-    condition[ax2].lPositiveCoefficient = g_Opt.spring;
 
     DIEFFECT eff;
     ZeroMemory(&eff, sizeof(eff));
@@ -643,12 +587,26 @@ HRESULT SetDeviceSpring()
     eff.cbTypeSpecificParams = sizeof(condition);
     eff.lpvTypeSpecificParams = condition;
     eff.dwStartDelay = 0;
-    
+
+    // Spring 1
+    condition[ax1].lOffset = g_nYForce;
+    condition[ax1].dwNegativeSaturation = g_Opt.spring;
+    condition[ax1].dwPositiveSaturation = g_Opt.spring;
+    condition[ax1].lDeadBand = 0;
+    condition[ax1].lNegativeCoefficient = g_Opt.spring;
+    condition[ax1].lPositiveCoefficient = g_Opt.spring;
+
+    condition[ax2].lOffset = (g_Opt.swap ? -g_nXForce : g_nXForce);
+    condition[ax2].dwNegativeSaturation = g_Opt.spring;
+    condition[ax2].dwPositiveSaturation = g_Opt.spring;
+    condition[ax2].lDeadBand = 0;
+    condition[ax2].lNegativeCoefficient = g_Opt.spring;
+    condition[ax2].lPositiveCoefficient = g_Opt.spring;
+
     if (g_pEffectSpring)
         g_pEffectSpring->SetParameters(&eff, DIEP_TYPESPECIFICPARAMS);
 
     // Spring 2
-    ZeroMemory(condition, sizeof(condition));
     condition[ax1].lOffset = g_nYForce;
     condition[ax1].dwNegativeSaturation = g_Opt.spring2;
     condition[ax1].dwPositiveSaturation = g_Opt.spring2;
@@ -663,24 +621,10 @@ HRESULT SetDeviceSpring()
     condition[ax2].lNegativeCoefficient = g_Opt.spring2;
     condition[ax2].lPositiveCoefficient = g_Opt.spring2;
 
-    ZeroMemory(&eff, sizeof(eff));
-    eff.dwSize = sizeof(DIEFFECT);
-    eff.dwFlags = DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS;
-    eff.dwDuration = INFINITE;
-    eff.dwSamplePeriod = 0;
-    eff.dwGain = DI_FFNOMINALMAX;
-    eff.dwTriggerButton = DIEB_NOTRIGGER;
-    eff.dwTriggerRepeatInterval = 0;
-    eff.cAxes = g_dwNumForceFeedbackAxis;
-    eff.rgdwAxes = rgdwAxes;
-    eff.rglDirection = rglDirection;
-    eff.lpEnvelope = 0;
-    eff.cbTypeSpecificParams = sizeof(condition);
-    eff.lpvTypeSpecificParams = condition;
-    eff.dwStartDelay = 0;
-
     if (g_pEffectSpring2)
         g_pEffectSpring2->SetParameters(&eff, DIEP_TYPESPECIFICPARAMS);
+    
+    // Set force profile
     if (g_Opt.g_bSpring == 1) {
         if (g_pEffectSpring2) g_pEffectSpring2->Stop();
         if (g_pEffectSpring) g_pEffectSpring->Start(1, 0);
@@ -698,7 +642,6 @@ HRESULT SetDeviceSpring()
         if (g_pEffectFricti2) g_pEffectFricti2->Start(1, 0);
     }
     return 0;
-
 }
 
 void Botones()
