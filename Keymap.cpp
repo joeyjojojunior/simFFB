@@ -3,6 +3,7 @@
 
 Input::Keymap::Keymap()
 {
+	keys.push_back(std::make_pair("`", VK_OEM_3));
 	keys.push_back(std::make_pair("Backspace", 0x08));
 	keys.push_back(std::make_pair("Tab", 0x09));
 	keys.push_back(std::make_pair("Clear", 0x0C));

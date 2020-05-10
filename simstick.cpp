@@ -50,7 +50,7 @@ stoptions g_Opt={
     0,      // x-coordinate of last window position
     0,      // y-coordinate of last window position
     true,   // swap axes        
-    1,      // no trim - only instant - only progressive - both 
+    1,      // no trim - only instant - only progressive - both  
     1,      // spring force status
 };       
 

@@ -11,7 +11,7 @@
 
 #define MAXSTICKS 32
 #define MAXBUTTONS 32
-
+extern BYTE g_bBoton[MAXBUTTONS];
 
 typedef struct _sticks {
     TCHAR name[MAX_PATH];

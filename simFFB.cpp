@@ -31,6 +31,9 @@ BOOL g_ptrim=false; //Progressive trimming flag
 BOOL g_itrim=true;  //Instantaneous trimming flag
 stoptions jopt;
 
+BOOL isLabelUpdatedToggle = false; // keep track of label updates to 
+BOOL isLabelUpdatedHold = false;   // prevent redraw every loop
+
 Input::Keymap keymap;
 short iKeyState;
 
@@ -74,6 +77,7 @@ void InitAll(BOOL firstrun);
 void SetSwapCheckbox();
 void ToggleMenuModifier(UINT menuItem, int(&modArr)[4], int i);
 void InitMenuModifier(MENUITEMINFO mii, UINT menuItem, int(&modArr)[4], int i);
+void SwapForceActiveLabel(BOOL b);
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
                      HINSTANCE hPrevInstance,
@@ -122,18 +126,24 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
                 if (g_ptrim)
                     JoystickStuffPT();
 
-                if (jopt.g_bSpring) {
-                    SetWindowText(hwndLBSpring, L"Spring Force *\t%");
-                    SetWindowText(hwndLBSpring2, L"Spring Force 2\t%");
-                    RedrawWindow(hwndLBSpring, NULL, NULL, RDW_ERASE);
-                    RedrawWindow(hwndLBSpring2, NULL, NULL, RDW_ERASE);
-                }
-                else {
-                    SetWindowText(hwndLBSpring, L"Spring Force\t%");
-                    SetWindowText(hwndLBSpring2, L"Spring Force 2 *\t%");
-                    RedrawWindow(hwndLBSpring, NULL, NULL, RDW_ERASE);
-                    RedrawWindow(hwndLBSpring2, NULL, NULL, RDW_ERASE);
+                if (jopt.trimmode == 1 || jopt.trimmode == 3) {
+                    if (g_bBoton[jopt.btrimHold] == UP && g_bBoton[jopt.btrimToggle] == DOWN && !isLabelUpdatedToggle) {
+                        SwapForceActiveLabel(isLabelUpdatedToggle);
+                        isLabelUpdatedToggle = true;
+                    }
+                    else if (g_bBoton[jopt.btrimToggle] == UP && isLabelUpdatedToggle) {
+                        SwapForceActiveLabel(isLabelUpdatedToggle);
+                        isLabelUpdatedToggle = false;
+                    }
 
+                    if (g_bBoton[jopt.btrimToggle] == UP && g_bBoton[jopt.btrimHold] == DOWN && !isLabelUpdatedHold) {
+                        SwapForceActiveLabel(isLabelUpdatedHold);
+                        isLabelUpdatedHold = true;
+                    }
+                    else if (g_bBoton[jopt.btrimHold] == UP && isLabelUpdatedHold) {
+                        SwapForceActiveLabel(isLabelUpdatedHold);
+                        isLabelUpdatedHold = false;
+                    }
                 }
 
                 iKeyState = GetAsyncKeyState(jopt.iKey);
@@ -262,7 +272,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
     CreateWindow(_T("static"),_T("SimFFB"),WS_CHILD|WS_VISIBLE|WS_BORDER|ES_CENTER,309,55,140,20,hWnd,NULL,hInstance,NULL);
     
-    hwndLBSpring = CreateWindow(_T("static"),_T("Spring Force\t%"),WS_CHILD|WS_VISIBLE,5,83,130,20,hWnd,NULL,hInstance,NULL);
+    hwndLBSpring = CreateWindow(_T("static"),_T("Spring Force *\t%"),WS_CHILD|WS_VISIBLE,5,83,130,20,hWnd,NULL,hInstance,NULL);
     hwndEBSpring=CreateWindow(_T("Edit"),_T("55"),WS_CHILD|WS_VISIBLE|ES_LEFT|ES_NUMBER|ES_READONLY,135,83,30,20,hWnd,NULL,hInstance,NULL);
     hwndTBSpring=CreateWindow(TRACKBAR_CLASS,NULL,WS_CHILD|WS_VISIBLE|TBS_ENABLESELRANGE,168,83,290,20,hWnd,NULL,hInstance,NULL);
     SendMessage(hwndTBSpring, TBM_SETRANGE,(WPARAM) TRUE,(LPARAM) MAKELONG(0, 100));
@@ -675,4 +685,15 @@ void InitMenuModifier(MENUITEMINFO mii, UINT menuItem, int(&modArr)[4], int i) {
     mii.fState = modArr[i] == 0 ? MFS_UNCHECKED : MFS_CHECKED;
     SetMenuItemInfo(g_hm, menuItem, FALSE, &mii);
     SetJtOptions(&jopt);
+}
+
+void SwapForceActiveLabel(BOOL b) {
+    if (b) {
+        SetWindowText(hwndLBSpring, L"Spring Force *\t%");
+        SetWindowText(hwndLBSpring2, L"Spring Force 2\t%");
+    }
+    else {
+        SetWindowText(hwndLBSpring, L"Spring Force\t%");
+        SetWindowText(hwndLBSpring2, L"Spring Force 2 *\t%");
+    }
 }
