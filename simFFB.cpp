@@ -194,6 +194,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 //    so that the application will get 'well formed' small icons associated
 //    with it.
 //
+
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
     WNDCLASSEX wcex;
@@ -205,15 +206,15 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.cbClsExtra        = 0;
     wcex.cbWndExtra        = 0;
     wcex.hInstance        = hInstance;
-    wcex.hIcon            = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SIMFFB));
+    wcex.hIcon            = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MSFFB2_ICON));
     wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
     wcex.hbrBackground    = (HBRUSH)(COLOR_WINDOW);
     wcex.lpszMenuName    = MAKEINTRESOURCE(IDC_SIMFFB);
     wcex.lpszClassName    = szWindowClass;
-    wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
-
+    wcex.hIconSm = NULL;
     return RegisterClassEx(&wcex);
 }
+
 
 //
 //   FUNCTION: InitInstance(HINSTANCE, int)
@@ -265,7 +266,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     ComboBox_SetCurSel(hwndCBTrimHold,0);
     ComboBox_SetCurSel(hwndCBTrimToggle, 0);
     ComboBox_SetCurSel(hwndCBTrimCenter, 0);
-    delete b;
+    delete[] b;
 
     hwndCBSticksPOV=CreateWindow(_T("combobox"),TEXT(""), CBS_DROPDOWNLIST |WS_CHILD | WS_VISIBLE,3,53,300,255,hWnd,NULL,hInstance,NULL);
 
@@ -583,6 +584,13 @@ void InitAll(BOOL firstrun)
     ComboBox_ResetContent(hwndCBSticks);
     ComboBox_ResetContent(hwndCBSticksPOV);
     for (int k = 0; k < JoysticksNumber(); k++) {
+        LPCWSTR s = JoystickName(k);
+        printf("%s", s);
+        if (wcscmp(JoystickName(k), L"Logitech G940 Joystick") == 0) {
+            HICON hicon = (HICON)LoadImage(GetModuleHandleW(NULL), MAKEINTRESOURCE(IDI_G940_ICON),
+                IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR | LR_DEFAULTSIZE);
+            SendMessage(g_hwnd, WM_SETICON, ICON_BIG, (LPARAM)hicon);
+        }
         ComboBox_AddString(hwndCBSticks,JoystickName(k));
         ComboBox_AddString(hwndCBSticksPOV,JoystickName(k));
     }
