@@ -44,9 +44,9 @@ stoptions g_Opt={
     5000,   // dampering level (force trim off)
     0,      // friction level (force trim off)
     0,      // key for reinitializing dinput
-    {0, 0, 0, 0}, // modifier keys for init dinput key
+    {0, 0, 0, 0}, // modifier keys for init dinput key - CTRL/ALT/SHIFT/WIN
     0,      // key for cycling trim
-    {0, 0, 0, 0}, // modifier keys for cycle trim key
+    {0, 0, 0, 0}, // modifier keys for cycle trim key - CTRL/ALT/SHIFT/WIN
     0,      // x-coordinate of last window position
     0,      // y-coordinate of last window position
     true,   // swap axes        
@@ -589,37 +589,71 @@ HRESULT SetDeviceSpring()
     eff.dwStartDelay = 0;
 
     // Spring 1
-    condition[ax1].lOffset = g_nYForce;
-    condition[ax1].dwNegativeSaturation = g_Opt.spring;
-    condition[ax1].dwPositiveSaturation = g_Opt.spring;
-    condition[ax1].lDeadBand = 0;
-    condition[ax1].lNegativeCoefficient = g_Opt.spring;
-    condition[ax1].lPositiveCoefficient = g_Opt.spring;
+    if (g_Opt.spring == 0) { // Fixes problematic behavior with G940
+        condition[ax1].lOffset = g_nYForce;
+        condition[ax1].dwNegativeSaturation = 100;
+        condition[ax1].dwPositiveSaturation = 100;
+        condition[ax1].lDeadBand = 0;
+        condition[ax1].lNegativeCoefficient = 100;
+        condition[ax1].lPositiveCoefficient = 100;
 
-    condition[ax2].lOffset = (g_Opt.swap ? -g_nXForce : g_nXForce);
-    condition[ax2].dwNegativeSaturation = g_Opt.spring;
-    condition[ax2].dwPositiveSaturation = g_Opt.spring;
-    condition[ax2].lDeadBand = 0;
-    condition[ax2].lNegativeCoefficient = g_Opt.spring;
-    condition[ax2].lPositiveCoefficient = g_Opt.spring;
+        condition[ax2].lOffset = (g_Opt.swap ? -g_nXForce : g_nXForce);
+        condition[ax2].dwNegativeSaturation = 100;
+        condition[ax2].dwPositiveSaturation = 100;
+        condition[ax2].lDeadBand = 0;
+        condition[ax2].lNegativeCoefficient = 100;
+        condition[ax2].lPositiveCoefficient = 100;
+    }
+    else {
+        condition[ax1].lOffset = g_nYForce;
+        condition[ax1].dwNegativeSaturation = g_Opt.spring;
+        condition[ax1].dwPositiveSaturation = g_Opt.spring;
+        condition[ax1].lDeadBand = 0;
+        condition[ax1].lNegativeCoefficient = g_Opt.spring;
+        condition[ax1].lPositiveCoefficient = g_Opt.spring;
+
+        condition[ax2].lOffset = (g_Opt.swap ? -g_nXForce : g_nXForce);
+        condition[ax2].dwNegativeSaturation = g_Opt.spring;
+        condition[ax2].dwPositiveSaturation = g_Opt.spring;
+        condition[ax2].lDeadBand = 0;
+        condition[ax2].lNegativeCoefficient = g_Opt.spring;
+        condition[ax2].lPositiveCoefficient = g_Opt.spring;
+    }
 
     if (g_pEffectSpring)
         g_pEffectSpring->SetParameters(&eff, DIEP_TYPESPECIFICPARAMS);
 
     // Spring 2
-    condition[ax1].lOffset = g_nYForce;
-    condition[ax1].dwNegativeSaturation = g_Opt.spring2;
-    condition[ax1].dwPositiveSaturation = g_Opt.spring2;
-    condition[ax1].lDeadBand = 0;
-    condition[ax1].lNegativeCoefficient = g_Opt.spring2;
-    condition[ax1].lPositiveCoefficient = g_Opt.spring2;
+    if (g_Opt.spring2 == 0) { // Fixes problematic behavior with G940
+        condition[ax1].lOffset = g_nYForce;
+        condition[ax1].dwNegativeSaturation = 100;
+        condition[ax1].dwPositiveSaturation = 100;
+        condition[ax1].lDeadBand = 0;
+        condition[ax1].lNegativeCoefficient = 100;
+        condition[ax1].lPositiveCoefficient = 100;
 
-    condition[ax2].lOffset = (g_Opt.swap ? -g_nXForce : g_nXForce);
-    condition[ax2].dwNegativeSaturation = g_Opt.spring2;
-    condition[ax2].dwPositiveSaturation = g_Opt.spring2;
-    condition[ax2].lDeadBand = 0;
-    condition[ax2].lNegativeCoefficient = g_Opt.spring2;
-    condition[ax2].lPositiveCoefficient = g_Opt.spring2;
+        condition[ax2].lOffset = (g_Opt.swap ? -g_nXForce : g_nXForce);
+        condition[ax2].dwNegativeSaturation = 100;
+        condition[ax2].dwPositiveSaturation = 100;
+        condition[ax2].lDeadBand = 0;
+        condition[ax2].lNegativeCoefficient = 100;
+        condition[ax2].lPositiveCoefficient = 100;
+    }
+    else {
+        condition[ax1].lOffset = g_nYForce;
+        condition[ax1].dwNegativeSaturation = g_Opt.spring2;
+        condition[ax1].dwPositiveSaturation = g_Opt.spring2;
+        condition[ax1].lDeadBand = 0;
+        condition[ax1].lNegativeCoefficient = g_Opt.spring2;
+        condition[ax1].lPositiveCoefficient = g_Opt.spring2;
+
+        condition[ax2].lOffset = (g_Opt.swap ? -g_nXForce : g_nXForce);
+        condition[ax2].dwNegativeSaturation = g_Opt.spring2;
+        condition[ax2].dwPositiveSaturation = g_Opt.spring2;
+        condition[ax2].lDeadBand = 0;
+        condition[ax2].lNegativeCoefficient = g_Opt.spring2;
+        condition[ax2].lPositiveCoefficient = g_Opt.spring2;
+    }
 
     if (g_pEffectSpring2)
         g_pEffectSpring2->SetParameters(&eff, DIEP_TYPESPECIFICPARAMS);
